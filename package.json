@@ -6,10 +6,25 @@
   "license": "MPL-2.0",
   "type": "module",
   "devDependencies": {
+    "@types/amqplib": "^0.10.7",
+    "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^20.5.7",
+    "@types/nodemailer": "^6.4.17",
+    "@types/qrcode": "^1.5.5",
     "typescript": "^5.2.2"
   },
   "dependencies": {
-    "encore.dev": "^1.48.5"
+    "@sequelize/sqlite3": "^7.0.0-alpha.46",
+    "@simplewebauthn/server": "^13.1.1",
+    "amqplib": "^0.10.8",
+    "bcryptjs": "^3.0.2",
+    "encore.dev": "^1.48.5",
+    "jsonwebtoken": "^9.0.2",
+    "nanoid": "^5.1.5",
+    "nodemailer": "^7.0.4",
+    "otplib": "^12.0.1",
+    "qrcode": "^1.5.4",
+    "sequelize": "^6.37.7",
+    "ua-parser-js": "^2.0.3"
   }
 }
