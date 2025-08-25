@@ -220,7 +220,7 @@ const authAppController = {
       const callMeta = currentRequest() as APICallMeta;
       const model = callMeta.middlewareData?.mainModel as MainModel;
       const userId = callMeta.middlewareData?.userId as string;
-      const token = await model.refreshToken.findByPk(refreshToken.value, {
+      const token = await model.token.findByPk(refreshToken.value, {
         attributes: ['clientId']
       });
       const clientId = token?.clientId;

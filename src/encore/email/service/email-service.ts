@@ -45,7 +45,7 @@ const emailService = {
       throw new APIError(ErrCode.NotFound, 'User not found!');
     }
 
-    const token = await model.refreshToken.findByPk(refreshToken, {
+    const token = await model.token.findByPk(refreshToken, {
       attributes: ['clientId']
     });
     if (!token?.clientId) {

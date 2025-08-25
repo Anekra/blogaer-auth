@@ -5,7 +5,7 @@ export const sendAddPasswordLink = api(
   {
     method: 'GET',
     path: '/auth-service/v1/email/user/add-password',
-    auth: false, // will change it to true later
+    auth: true,
     expose: true,
     tags: ['verify-refresh-token', 'verify-access-token', 'main-model']
   },
@@ -16,7 +16,7 @@ export const sendResetPasswordLink = api(
   {
     method: 'GET',
     path: '/auth-service/v1/email/user/reset-password',
-    auth: false, // will change it to true later
+    auth: true,
     expose: true,
     tags: ['verify-refresh-token', 'verify-access-token', 'main-model']
   },
@@ -27,7 +27,7 @@ export const sendUpdateEmailLink = api(
   {
     method: 'GET',
     path: '/auth-service/v1/email/user/update-email',
-    auth: false, // will change it to true later
+    auth: true,
     expose: true,
     tags: ['verify-refresh-token', 'verify-access-token', 'main-model']
   },
@@ -38,7 +38,7 @@ export const sendUpdateUsernameLink = api(
   {
     method: 'GET',
     path: '/auth-service/v1/email/user/update-username',
-    auth: false, // will change it to true later
+    auth: true,
     expose: true,
     tags: ['verify-refresh-token', 'verify-access-token', 'main-model']
   },
@@ -49,7 +49,7 @@ export const sendUpdateEmailOtp = api(
   {
     method: 'POST',
     path: '/auth-service/v1/email/user/update-email-otp',
-    auth: false, // will change it to true later
+    auth: true,
     expose: true,
     tags: ['verify-refresh-token', 'verify-access-token', 'main-model']
   },
@@ -60,7 +60,7 @@ export const getUpdateEmailOtpTime = api(
   {
     method: 'GET',
     path: '/auth-service/v1/email/user/update-email/otp-time',
-    auth: false, // will change it to true later
+    auth: true,
     expose: true,
     tags: ['verify-refresh-token', 'verify-access-token', 'main-model']
   },

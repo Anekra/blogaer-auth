@@ -27,7 +27,7 @@ const userController = {
       const callMeta = currentRequest() as APICallMeta;
       const model = callMeta.middlewareData?.mainModel as MainModel;
       const userId = callMeta.middlewareData?.userId as string;
-      const token = await model.refreshToken.findByPk(refreshToken.value, {
+      const token = await model.token.findByPk(refreshToken.value, {
         attributes: ['clientId']
       });
       const foundRequests =
@@ -140,7 +140,7 @@ const userController = {
       const callMeta = currentRequest() as APICallMeta;
       const userId = callMeta.middlewareData?.userId as string;
       const model = callMeta.middlewareData?.mainModel as MainModel;
-      const token = await model.refreshToken.findByPk(refreshToken.value, {
+      const token = await model.token.findByPk(refreshToken.value, {
         attributes: ['clientId']
       });
       const userJoins = (await model.user.findByPk(userId, {

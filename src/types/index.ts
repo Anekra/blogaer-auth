@@ -6,7 +6,8 @@ export type DefaultRes =
       data?: any;
       message?: string;
     }
-  | APIError | undefined;
+  | APIError
+  | undefined;
 
 export type UserAgent = {
   browser: string;
@@ -17,7 +18,14 @@ export type UserAgent = {
   os: string;
 };
 
-export type Decoded = {
+export type RefreshDecoded = {
+  UserInfo: {
+    id: string;
+    username: string;
+  };
+};
+
+export type AccessDecoded = {
   UserInfo: {
     id: string;
     username: string;

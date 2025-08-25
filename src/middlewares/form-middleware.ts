@@ -2,11 +2,17 @@ import { APIError, ErrCode, middleware } from 'encore.dev/api';
 import { MainModel } from '../models/main-model';
 import { generateClientId, parseJsonBody } from '../utils/helper';
 
+type ParsedPayload = {
+  otp: string;
+  request: string;
+  limit: number;
+}
+
 const formMiddleware = {
   verifyRequestFormOtp: middleware(
     {
       target: {
-        auth: false, // will change it to true later
+        auth: true,
         tags: ['verify-request-form-otp']
       }
     },
@@ -22,7 +28,7 @@ const formMiddleware = {
         );
       }
 
-      const { otp, request, limit } = await parseJsonBody(req.rawRequest);
+      const { otp, request, limit } = req.requestMeta?.parsedPayload as ParsedPayload;
       const model = req.data.mainModel as MainModel;
       const { clientId } = generateClientId(
         req.rawRequest.headers['user-agent']
@@ -80,7 +86,7 @@ const formMiddleware = {
   verifyRequestForm: middleware(
     {
       target: {
-        auth: false, // will change it to true later
+        auth: true,
         tags: ['verify-request-form']
       }
     },

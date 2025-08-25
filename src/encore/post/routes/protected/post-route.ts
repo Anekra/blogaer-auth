@@ -5,7 +5,7 @@ export const getPostsByUserId = api.raw(
   {
     method: 'GET',
     path: '/auth-service/v1/post/user',
-    auth: false, // will change it to true later
+    auth: true,
     expose: true,
     tags: [
       'main-model',
@@ -22,7 +22,7 @@ export const addPost = api.raw(
   {
     method: 'POST',
     path: '/auth-service/v1/post',
-    auth: false, // will change it to true later
+    auth: true,
     expose: true,
     tags: [
       'main-model',
@@ -39,7 +39,7 @@ export const patchPost = api.raw(
   {
     method: 'PATCH',
     path: '/auth-service/v1/post',
-    auth: false, // will change it to true later
+    auth: true,
     expose: true,
     tags: [
       'main-model',
@@ -56,7 +56,7 @@ export const deletePost = api.raw(
   {
     method: 'DELETE',
     path: '/auth-service/v1/post/:id',
-    auth: false, // will change it to true later
+    auth: true,
     expose: true,
     tags: [
       'main-model',

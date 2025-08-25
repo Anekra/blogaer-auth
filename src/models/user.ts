@@ -98,7 +98,7 @@ const User = (sequelize: Sequelize, dataTypes: typeof DataTypes) => {
   ) as UserStatic;
 
   user.associate = (model: MainModel) => {
-    user.hasMany(model.refreshToken, {
+    user.hasMany(model.token, {
       foreignKey: 'user_id'
     });
 

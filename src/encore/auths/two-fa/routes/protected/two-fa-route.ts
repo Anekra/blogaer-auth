@@ -7,7 +7,7 @@ export const generateRegisterWebauthn = api(
   {
     method: 'GET',
     path: '/auth-service/v1/auth/two-fa/webauthn/register/generate',
-    auth: false, // will change it to true later
+    auth: true,
     expose: true,
     tags: [
       'verify-refresh-token',
@@ -23,7 +23,7 @@ export const verifyRegisterWebauthn = api(
   {
     method: 'POST',
     path: '/auth-service/v1/auth/two-fa/webauthn/register/verify',
-    auth: false, // will change it to true later
+    auth: true,
     expose: true,
     tags: [
       'verify-refresh-token',
@@ -39,7 +39,7 @@ export const deleteWebauthnPasskey = api(
   {
     method: 'DELETE',
     path: '/auth-service/v1/auth/two-fa/webauthn/passkey',
-    auth: false, // will change it to true later
+    auth: true,
     expose: true,
     tags: ['verify-refresh-token', 'verify-access-token', 'main-model']
   },
@@ -50,7 +50,7 @@ export const registerAuthApp = api(
   {
     method: 'GET',
     path: '/auth-service/v1/auth/two-fa/authapp/register',
-    auth: false, // will change it to true later
+    auth: true,
     expose: true,
     tags: [
       'verify-refresh-token',
@@ -66,7 +66,7 @@ export const verifyAuthApp = api(
   {
     method: 'POST',
     path: '/auth-service/v1/auth/two-fa/authapp/verify',
-    auth: false, // will change it to true later
+    auth: true,
     expose: true,
     tags: [
       'verify-refresh-token',
@@ -82,7 +82,7 @@ export const getAuthAppToken = api<UsernameReq>(
   {
     method: 'GET',
     path: '/auth-service/v1/auth/two-fa/authapp/:username',
-    auth: false, // will change it to true later
+    auth: true,
     expose: true,
     tags: ['verify-refresh-token', 'verify-access-token', 'main-model']
   },
@@ -93,7 +93,7 @@ export const deleteAuthAppSecret = api(
   {
     method: 'DELETE',
     path: '/auth-service/v1/auth/two-fa/authapp',
-    auth: false, // will change it to true later
+    auth: true,
     expose: true,
     tags: ['verify-refresh-token', 'verify-access-token', 'main-model']
   },

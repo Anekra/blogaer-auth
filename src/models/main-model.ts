@@ -1,9 +1,10 @@
 'use strict';
+
 import { DataTypes, Dialect, Sequelize } from 'sequelize';
 import sequelizeConfig from '../config/sequelize';
 import User from './user';
 import UserRole from './user-role';
-import RefreshToken from './refresh-token';
+import Token from './token';
 import UserOauth from './user-oauth';
 import UserSocial from './user-social';
 import UserPasskey from './user-passkey';
@@ -13,7 +14,7 @@ import SavedAccount from './saved-account';
 import UserFormRequest from './user-form-request';
 
 export type MainModel = {
-  refreshToken: ReturnType<typeof RefreshToken>;
+  token: ReturnType<typeof Token>;
   savedAccount: ReturnType<typeof SavedAccount>;
   user: ReturnType<typeof User>;
   userRole: ReturnType<typeof UserRole>;
@@ -66,7 +67,7 @@ async function initMainModel() {
   await dbConnect(sequelize);
 
   mainModel = {
-    refreshToken: RefreshToken(sequelize, DataTypes),
+    token: Token(sequelize, DataTypes),
     savedAccount: SavedAccount(sequelize, DataTypes),
     user: User(sequelize, DataTypes),
     userRole: UserRole(sequelize, DataTypes),

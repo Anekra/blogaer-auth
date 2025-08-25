@@ -5,29 +5,37 @@ import { DataTypes, Sequelize, Model } from 'sequelize';
 import { getMainModel } from '../utils/helper';
 import User from './user';
 
-interface RefreshTokenModel {
-  token: string;
+interface TokenModel {
+  refresh: string;
+  access: string;
   userId: string;
   clientId: string;
   loginWith?: string;
+  refreshExp?: typeof DataTypes.DATE;
+  accessExp?: typeof DataTypes.DATE;
   createdAt?: typeof DataTypes.DATE;
   updatedAt?: typeof DataTypes.DATE;
 }
 
-interface RefreshToken extends Model<RefreshTokenModel>, RefreshTokenModel {}
+interface Token extends Model<TokenModel>, TokenModel {}
 
-type RefreshTokenStatic = typeof Model & {
-  new (values?: Record<string, unknown>, options?: any): RefreshToken;
+type TokenStatic = typeof Model & {
+  new (values?: Record<string, unknown>, options?: any): Token;
   associate: (model: MainModel) => void;
 };
 
-const RefreshToken = (sequelize: Sequelize, dataTypes: typeof DataTypes) => {
-  const refreshToken = sequelize.define<RefreshToken>(
-    'RefreshToken',
+const Token = (sequelize: Sequelize, dataTypes: typeof DataTypes) => {
+  const token = sequelize.define<Token>(
+    'Token',
     {
-      token: {
+      refresh: {
         allowNull: false,
         primaryKey: true,
+        unique: true,
+        type: dataTypes.STRING
+      },
+      access: {
+        allowNull: false,
         unique: true,
         type: dataTypes.STRING
       },
@@ -44,6 +52,14 @@ const RefreshToken = (sequelize: Sequelize, dataTypes: typeof DataTypes) => {
         defaultValue: 'credentials',
         type: dataTypes.STRING
       },
+      refreshExp: {
+        defaultValue: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+        type: dataTypes.DATE
+      },
+      accessExp: {
+        defaultValue: new Date(Date.now() + 15 * 60 * 1000),
+        type: dataTypes.DATE
+      },
       createdAt: {
         type: dataTypes.DATE
       },
@@ -52,7 +68,7 @@ const RefreshToken = (sequelize: Sequelize, dataTypes: typeof DataTypes) => {
       }
     },
     {
-      tableName: 'refresh_tokens',
+      tableName: 'tokens',
       underscored: true,
       hooks: {
         async afterCreate(attributes, _) {
@@ -99,22 +115,22 @@ const RefreshToken = (sequelize: Sequelize, dataTypes: typeof DataTypes) => {
             });
           }
 
-          if ((await model.refreshToken.count()) > 1) {
-            const { count } = await model.refreshToken.findAndCountAll({
+          if ((await model.token.count()) > 1) {
+            const { count } = await model.token.findAndCountAll({
               where: { clientId: attributes.clientId }
             });
             if (count > 1) {
-              await model.refreshToken.destroy({
+              await model.token.destroy({
                 where: {
                   clientId: attributes.clientId,
-                  token: { [Op.ne]: attributes.token }
+                  refresh: { [Op.ne]: attributes.refresh }
                 }
               });
             }
 
             const aWeekAgo = new Date();
             aWeekAgo.setDate(aWeekAgo.getDate() - 7);
-            refreshToken.destroy({
+            token.destroy({
               where: {
                 updatedAt: {
                   [Op.lt]: aWeekAgo
@@ -130,18 +146,18 @@ const RefreshToken = (sequelize: Sequelize, dataTypes: typeof DataTypes) => {
         }
       }
     }
-  ) as RefreshTokenStatic;
+  ) as TokenStatic;
 
-  refreshToken.associate = (model: MainModel) => {
+  token.associate = (model: MainModel) => {
     if (model.user) {
-      refreshToken.belongsTo(model.user, {
+      token.belongsTo(model.user, {
         foreignKey: 'user_id',
         targetKey: 'id'
       });
     }
   };
 
-  return refreshToken;
+  return token;
 };
 
-export default RefreshToken;
+export default Token;

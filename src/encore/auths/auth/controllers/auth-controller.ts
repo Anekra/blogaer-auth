@@ -1,12 +1,11 @@
 import { APIError, ErrCode } from 'encore.dev/api';
 import bcryptjs from 'bcryptjs';
-import jwt, { JwtPayload, Secret, VerifyErrors } from 'jsonwebtoken';
-import { Decoded, DefaultRes } from '../../../../types';
+import jwt, { JwtPayload, VerifyErrors } from 'jsonwebtoken';
+import { AccessDecoded, DefaultRes } from '../../../../types';
 import { MainModel } from '../../../../models/main-model';
 import { catchError, generateClientId } from '../../../../utils/helper';
 import { APICallMeta, currentRequest } from 'encore.dev';
 import {
-  EmailOrUsernameReq,
   LoginReq,
   RefreshTokenReq,
   RegisterReq
@@ -14,10 +13,7 @@ import {
 import { col, fn, Op, where } from 'sequelize';
 import jwtService from '../services/jwt-service';
 import User from '../../../../models/user';
-import UserSetting from '../../../../models/user-setting';
-import UserPasskey from '../../../../models/user-passkey';
-import UserTotpSecret from '../../../../models/user-totp-secret';
-import RefreshToken from '../../../../models/refresh-token';
+import Token from '../../../../models/token';
 
 const authController = {
   async register({
@@ -78,8 +74,9 @@ const authController = {
           'No user-agent data provided!'
         );
       }
-      await model.refreshToken.create({
-        token: refreshToken,
+      await model.token.create({
+        refresh: refreshToken,
+        access: accessToken,
         userId: user.id,
         clientId
       });
@@ -143,8 +140,9 @@ const authController = {
           console.warn('LOGIN auth-controller >> User agent is empty!');
           throw new APIError(ErrCode.InvalidArgument, 'User agent is empty!');
         }
-        await model.refreshToken.create({
-          token: newRefreshToken,
+        await model.token.create({
+          refresh: newRefreshToken,
+          access: accessToken,
           userId: user.id,
           clientId
         });
@@ -163,8 +161,8 @@ const authController = {
           }
         };
       } else {
-        const deletedToken = await model.refreshToken.destroy({
-          where: { token: refreshToken }
+        const deletedToken = await model.token.destroy({
+          where: { refresh: refreshToken }
         });
         console.warn(
           'LOGIN auth-controller deleted refresh token after reuse detected >>',
@@ -182,24 +180,21 @@ const authController = {
     try {
       const callMeta = currentRequest() as APICallMeta;
       const model = callMeta.middlewareData?.mainModel as MainModel;
-      const foundToken = (await model.refreshToken.findByPk(
-        refreshToken.value,
-        {
-          include: [
-            {
-              model: model.user,
-              attributes: ['username', 'roleId']
-            }
-          ]
-        }
-      )) as RefreshToken & { User: User };
+      const foundToken = (await model.token.findByPk(refreshToken.value, {
+        include: [
+          {
+            model: model.user,
+            attributes: ['username', 'roleId']
+          }
+        ]
+      })) as Token & { User: User };
 
       // Refresh token reuse detection!
       jwt.verify(
         refreshToken.value,
         `${process.env.REFRESH_TOKEN_SECRET}`,
         async (err: VerifyErrors | null, decoded?: string | JwtPayload) => {
-          const decodedToken = decoded as Decoded;
+          const decodedToken = decoded as AccessDecoded;
           const decodedTokenUsername = decodedToken?.UserInfo.username;
           if (!foundToken) {
             if (err) {
@@ -221,7 +216,7 @@ const authController = {
                 }
               });
               if (hackedUser) {
-                const deletedTokens = await model.refreshToken.destroy({
+                const deletedTokens = await model.token.destroy({
                   where: {
                     userId: hackedUser.id
                   }
@@ -245,9 +240,9 @@ const authController = {
           }
           if (err) {
             if (decodedTokenUsername) {
-              const deletedTokens = await model.refreshToken.destroy({
+              const deletedTokens = await model.token.destroy({
                 where: {
-                  token: refreshToken
+                  refresh: refreshToken
                 }
               });
               console.warn(
@@ -309,9 +304,9 @@ const authController = {
               'session_token',
               { expiresIn: '1d' }
             );
-            await model.refreshToken.update(
-              { token: newRefreshToken },
-              { where: { token: refreshToken } }
+            await model.token.update(
+              { refresh: newRefreshToken, access: accessToken },
+              { where: { refresh: refreshToken } }
             );
 
             return {
@@ -335,8 +330,8 @@ const authController = {
     try {
       const callMeta = currentRequest() as APICallMeta;
       const model = callMeta.middlewareData?.mainModel as MainModel;
-      await model.refreshToken.destroy({
-        where: { token: refreshToken }
+      await model.token.destroy({
+        where: { refresh: refreshToken }
       });
 
       return;
@@ -349,16 +344,13 @@ const authController = {
     try {
       const callMeta = currentRequest() as APICallMeta;
       const model = callMeta.middlewareData?.mainModel as MainModel;
-      const foundToken = (await model.refreshToken.findByPk(
-        refreshToken.value,
-        {
-          attributes: ['token'],
-          include: {
-            model: model.user,
-            attributes: ['username']
-          }
+      const foundToken = (await model.token.findByPk(refreshToken.value, {
+        attributes: ['token'],
+        include: {
+          model: model.user,
+          attributes: ['username']
         }
-      )) as RefreshToken & { User: { username: string } };
+      })) as Token & { User: { username: string } };
 
       if (!foundToken) {
         console.warn(

@@ -93,7 +93,7 @@ export async function closeChannel(timeout: NodeJS.Timeout, channel: Channel) {
 export async function parseJsonBody<T = any>(
   req: IncomingMessage | RawRequest
 ): Promise<T> {
-  const chunks: Buffer[] = [];
+  const chunks = [];
   for await (const chunk of req) {
     chunks.push(chunk);
   }

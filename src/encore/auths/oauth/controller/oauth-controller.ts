@@ -72,7 +72,7 @@ const oauthController = {
 
           const { clientId } = generateClientId(req.headers['user-agent']);
           if (clientId) {
-            await model.refreshToken.create({
+            await model.token.create({
               token: newRefreshToken,
               userId: `${user.id}`,
               loginWith: OauthProvider.Google,
@@ -195,7 +195,7 @@ const oauthController = {
           );
           const { clientId } = generateClientId(req.headers['user-agent']);
           if (clientId) {
-            await model.refreshToken.create({
+            await model.token.create({
               token: newRefreshToken,
               userId: `${user.id}`,
               loginWith: OauthProvider.Github,

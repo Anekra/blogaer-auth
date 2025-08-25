@@ -296,7 +296,7 @@ const webauthnController = {
             'No user-agent data provided!'
           );
         }
-        await model.refreshToken.create({
+        await model.token.create({
           token: newRefreshToken,
           userId: user.id,
           clientId
@@ -444,7 +444,7 @@ const webauthnController = {
         const existingPasskey = userPasskeys.find(
           (key) => key.id === credential.id
         );
-        const token = await model.refreshToken.findByPk(refreshToken.value, {
+        const token = await model.token.findByPk(refreshToken.value, {
           attributes: ['clientId']
         });
         const clientId = token?.clientId;
@@ -502,7 +502,7 @@ const webauthnController = {
       const callMeta = currentRequest() as APICallMeta;
       const model = callMeta.middlewareData?.mainModel as MainModel;
       const userId = callMeta.middlewareData?.userId as string;
-      const token = await model.refreshToken.findByPk(refreshToken.value, {
+      const token = await model.token.findByPk(refreshToken.value, {
         attributes: ['clientId']
       });
 

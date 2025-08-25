@@ -1,7 +1,7 @@
 import { APIError, ErrCode, middleware } from 'encore.dev/api';
 import { catchError, parseCookies } from '../utils/helper';
 import jwt from 'jsonwebtoken';
-import { Decoded } from '../types';
+import { AccessDecoded } from '../types';
 
 const authMiddleware = {
   verifyOauthCode: middleware(
@@ -78,7 +78,7 @@ const authMiddleware = {
           );
         }
         const secret = `${process.env.ACCESS_TOKEN_SECRET}`;
-        const decoded = jwt.verify(accessToken, secret) as Decoded;
+        const decoded = jwt.verify(accessToken, secret) as AccessDecoded;
         if (!decoded) {
           throw new APIError(ErrCode.PermissionDenied, 'Invalid token!');
         }
@@ -88,10 +88,7 @@ const authMiddleware = {
 
         return await next(req);
       } catch (error) {
-        const [err] = catchError(
-          'VERIFY ACCESS TOKEN auth-middleware',
-          error
-        );
+        const [err] = catchError('VERIFY ACCESS TOKEN auth-middleware', error);
         throw err;
       }
     }
