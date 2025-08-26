@@ -1,10 +1,9 @@
 import { APICallMeta, currentRequest } from 'encore.dev';
 import {
   AddOrResetPasswordReq,
-  PatchAccount,
+  PatchAccountReq,
   PatchSettingReq,
-  PatchSocialReq as PatchSocialReq,
-  RefreshTokenReq
+  PatchSocialReq
 } from '../../../types/request';
 import { MainModel } from '../../../models/main-model';
 import userFormRequestService from '../service/user-service';
@@ -18,7 +17,7 @@ import UserSetting from '../../../models/user-setting';
 import UserTotpSecret from '../../../models/user-totp-secret';
 import User from '../../../models/user';
 import userService from '../service/user-service';
-import { catchError, generateClientId } from '../../../utils/helper';
+import { catchError, generateUAId } from '../../../utils/helper';
 import bcryptjs from 'bcryptjs';
 
 const userController = {
@@ -66,7 +65,7 @@ const userController = {
     name,
     description,
     picture
-  }: PatchAccount) {
+  }: PatchAccountReq) {
     const callMeta = currentRequest() as APICallMeta;
     const userFormRequest = callMeta.middlewareData
       ?.userFormRequest as UserFormRequest;
@@ -228,8 +227,8 @@ const userController = {
         }
       );
 
-      const { clientId } = generateClientId(userAgent);
-      if (!clientId) {
+      const { uAId } = generateUAId(userAgent);
+      if (!uAId) {
         console.warn(
           'ADD OR RESET PASSWORD user-controller >> User agent is invalid!'
         );
@@ -239,7 +238,7 @@ const userController = {
       if (updatedData === 1) {
         await model.userFormRequest.update(
           { status: CommonStatus.Success },
-          { where: { clientId, request: subject, limit } }
+          { where: { clientId: uAId, request: subject, limit } }
         );
 
         return;

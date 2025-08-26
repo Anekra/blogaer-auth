@@ -1,7 +1,7 @@
 import { APICallMeta, currentRequest } from 'encore.dev';
 import { MainModel } from '../../../../models/main-model';
 import { col, fn, Op, where } from 'sequelize';
-import { catchError, generateClientId } from '../../../../utils/helper';
+import { catchError, generateUAId } from '../../../../utils/helper';
 import { APIError, ErrCode } from 'encore.dev/api';
 import SavedAccount from '../../../../models/saved-account';
 import User from '../../../../models/user';
@@ -23,8 +23,8 @@ const savedAccountController = {
         }
       });
 
-      const { clientId } = generateClientId(userAgent);
-      if (!clientId) {
+      const { uAId } = generateUAId(userAgent);
+      if (!uAId) {
         console.warn(
           'GET SAVED ACCOUNTS saved-account-controller >> User agent is empty!',
           userAgent
@@ -35,7 +35,7 @@ const savedAccountController = {
           'No user-agent data provided!'
         );
       }
-      const savedAccount = (await model.savedAccount.findByPk(clientId, {
+      const savedAccount = (await model.savedAccount.findByPk(uAId, {
         include: {
           model: model.user,
           attributes: ['id', 'username', 'email', ['picture', 'img']]
@@ -64,8 +64,8 @@ const savedAccountController = {
     try {
       const callMeta = currentRequest() as APICallMeta;
       const model = callMeta.middlewareData?.mainModel as MainModel;
-      const { clientId } = generateClientId(userAgent);
-      if (!clientId) {
+      const { uAId } = generateUAId(userAgent);
+      if (!uAId) {
         console.warn(
           'GET SAVED ACCOUNTS saved-account-controller >> User agent is empty!'
         );
@@ -75,7 +75,7 @@ const savedAccountController = {
           'No user-agent data provided!'
         );
       }
-      const savedAccount = await model.savedAccount.findByPk(clientId);
+      const savedAccount = await model.savedAccount.findByPk(uAId);
       const user = await model.user.findOne({
         where: where(
           fn('lower', col('username')),

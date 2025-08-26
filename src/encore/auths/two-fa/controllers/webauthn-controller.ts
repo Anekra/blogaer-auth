@@ -12,7 +12,7 @@ import { col, fn, Op, where } from 'sequelize';
 import User from '../../../../models/user';
 import { APIError, ErrCode } from 'encore.dev/api';
 import jwtService from '../../auth/services/jwt-service';
-import { catchError, generateClientId } from '../../../../utils/helper';
+import { catchError, generateUAId } from '../../../../utils/helper';
 import UserPasskey from '../../../../models/user-passkey';
 import {
   generateAuthenticationOptions,
@@ -35,8 +35,8 @@ const webauthnController = {
     const model = callMeta.middlewareData?.mainModel as MainModel;
     const inMemModel = callMeta.middlewareData?.inMemModel as InMemoryModel;
     try {
-      const { clientId } = generateClientId(userAgent);
-      if (!clientId) {
+      const { uAId } = generateUAId(userAgent);
+      if (!uAId) {
         console.warn(
           'AUTH APP LOGIN webauthn-controller >> User agent is empty!'
         );
@@ -59,12 +59,12 @@ const webauthnController = {
         include: {
           model: model.userPasskey,
           attributes: ['id', 'transports', 'clientId', 'userId'],
-          where: { clientId }
+          where: { clientId: uAId }
         }
       })) as User & { UserPasskeys: UserPasskey[] };
 
       const userPasskey = user.UserPasskeys.find(
-        (passkey) => passkey.clientId === clientId && passkey.userId === user.id
+        (passkey) => passkey.clientId === uAId && passkey.userId === user.id
       );
       if (!userPasskey) {
         console.warn(
@@ -169,8 +169,8 @@ const webauthnController = {
         throw new APIError(ErrCode.NotFound, 'User passkey not found!');
       }
 
-      const { restructuredUserAgent } = generateClientId(userAgent);
-      if (!restructuredUserAgent) {
+      const { uAData } = generateUAId(userAgent);
+      if (!uAData) {
         console.warn(
           'WEBAUTHN VERIFY LOGIN webauthn-controller >> Restructured user agent is null!'
         );
@@ -180,7 +180,7 @@ const webauthnController = {
           'Restructured user agent is null!'
         );
       }
-      const isMobile = restructuredUserAgent.platform === 'mobile';
+      const isMobile = uAData.platform === 'mobile';
       let verification;
       verification = await verifyAuthenticationResponse({
         response: option,
@@ -285,8 +285,8 @@ const webauthnController = {
           user.id
         );
 
-        const { clientId } = generateClientId(userAgent);
-        if (!clientId) {
+        const { uAId } = generateUAId(userAgent);
+        if (!uAId) {
           console.warn(
             'AUTH APP LOGIN webauthn-controller >> User agent is empty!'
           );
@@ -299,7 +299,7 @@ const webauthnController = {
         await model.token.create({
           token: newRefreshToken,
           userId: user.id,
-          clientId
+          clientId: uAId
         });
 
         await inMemModel.webAuthnLoginOption.truncate({
@@ -411,8 +411,8 @@ const webauthnController = {
         );
       }
 
-      const { restructuredUserAgent } = generateClientId(userAgent);
-      if (!restructuredUserAgent) {
+      const { uAData } = generateUAId(userAgent);
+      if (!uAData) {
         console.warn(
           'WEBAUTHN VERIFY LOGIN webauthn-controller >> Restructured user agent is null!'
         );
@@ -423,7 +423,7 @@ const webauthnController = {
         );
       }
 
-      const isMobile = restructuredUserAgent.platform === 'mobile';
+      const isMobile = uAData.platform === 'mobile';
       let verification: VerifiedRegistrationResponse;
       verification = await verifyRegistrationResponse({
         response: options,
@@ -450,8 +450,8 @@ const webauthnController = {
         const clientId = token?.clientId;
 
         if (!existingPasskey && clientId) {
-          const clientBrowser = restructuredUserAgent.browser;
-          const clientOs = restructuredUserAgent.os;
+          const clientBrowser = uAData.browser;
+          const clientOs = uAData.os;
           if (!clientBrowser || !clientOs) {
             console.warn(
               'WEBAUTHN VERIFY LOGIN webauthn-controller >> user-agent header is empty!'

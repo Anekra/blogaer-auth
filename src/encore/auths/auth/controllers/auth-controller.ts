@@ -5,7 +5,7 @@ import { AccessDecoded, DefaultRes, RefreshDecoded } from '../../../../types';
 import { MainModel } from '../../../../models/main-model';
 import {
   catchError,
-  generateClientId as generateUAId
+  generateUAId as generateUAId
 } from '../../../../utils/helper';
 import { APICallMeta, currentRequest } from 'encore.dev';
 import { LoginReq, RegisterReq, XAuthReq } from '../../../../types/request';
@@ -65,8 +65,8 @@ const authController = {
         { expiresIn: '1d' }
       );
 
-      const { uAId: clientId } = generateUAId(userAgent);
-      if (!clientId) {
+      const { uAId } = generateUAId(userAgent);
+      if (!uAId) {
         console.warn('REGISTER auth-controller >> User agent is empty!');
         throw new APIError(
           ErrCode.InvalidArgument,
@@ -77,7 +77,7 @@ const authController = {
         refresh: refreshToken,
         access: accessToken,
         userId: user.id,
-        clientId
+        clientId: uAId
       });
 
       return {

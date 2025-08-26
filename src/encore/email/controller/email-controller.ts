@@ -7,11 +7,7 @@ import {
 } from '../../../types/request';
 import mainModel, { MainModel } from '../../../models/main-model';
 import { EmailSubject } from '../../../utils/enums';
-import {
-  catchError,
-  generateClientId,
-  generateOtp
-} from '../../../utils/helper';
+import { catchError, generateUAId, generateOtp } from '../../../utils/helper';
 import { APIError, ErrCode } from 'encore.dev/api';
 
 const emailController = {
@@ -179,8 +175,8 @@ const emailController = {
       const callMeta = currentRequest() as APICallMeta;
       const userId = callMeta.middlewareData?.userId as string;
       const model = callMeta.middlewareData?.mainModel as MainModel;
-      const { clientId } = generateClientId(userAgent);
-      if (!clientId) {
+      const { uAId } = generateUAId(userAgent);
+      if (!uAId) {
         console.warn(
           'GET UPDATE EMAIL OTP TIME email-controller >> User agent is invalid!'
         );
@@ -190,7 +186,7 @@ const emailController = {
       const foundRequest = await model.userFormRequest.findOne({
         where: {
           userId,
-          clientId,
+          clientId: uAId,
           request: `${request}`,
           limit: new Date(Number(limit))
         }

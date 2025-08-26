@@ -12,7 +12,7 @@ import UserTotpSecret from '../../../../models/user-totp-secret';
 import { APIError, ErrCode } from 'encore.dev/api';
 import { authenticator } from 'otplib';
 import jwtService from '../../auth/services/jwt-service';
-import { catchError, generateClientId } from '../../../../utils/helper';
+import { catchError, generateUAId } from '../../../../utils/helper';
 import qrcode from 'qrcode';
 import { InMemoryModel } from '../../../../models/in-memory/in-mem-model';
 import { TwoFAMethod } from '../../../../utils/enums';
@@ -56,8 +56,8 @@ const authAppController = {
         user.id
       );
 
-      const { clientId } = generateClientId(userAgent);
-      if (!clientId) {
+      const { uAId } = generateUAId(userAgent);
+      if (!uAId) {
         console.warn(
           'AUTH APP LOGIN authapp-controller >> User agent is empty!'
         );

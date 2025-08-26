@@ -9,7 +9,7 @@ import {
   catchError,
   closeChannel,
   errCodeToHttpStatus,
-  generateClientId,
+  generateUAId,
   generateRandomChars
 } from '../../../../utils/helper';
 import jwtService from '../../auth/services/jwt-service';
@@ -70,7 +70,7 @@ const oauthController = {
             user.id
           );
 
-          const { clientId } = generateClientId(req.headers['user-agent']);
+          const { uAId: clientId } = generateUAId(req.headers['user-agent']);
           if (clientId) {
             await model.token.create({
               token: newRefreshToken,
@@ -193,13 +193,13 @@ const oauthController = {
             user.roleId,
             user.id
           );
-          const { clientId } = generateClientId(req.headers['user-agent']);
-          if (clientId) {
+          const { uAId } = generateUAId(req.headers['user-agent']);
+          if (uAId) {
             await model.token.create({
               token: newRefreshToken,
               userId: `${user.id}`,
               loginWith: OauthProvider.Github,
-              clientId
+              clientId: uAId
             });
 
             res.statusCode = 200;

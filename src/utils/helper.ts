@@ -37,11 +37,10 @@ export async function getMainModel() {
   return await initMainModel;
 }
 
-export function generateClientId(userAgent: string = '') {
-  if (!userAgent) return { clientId: null, userAgent: null };
-  const uaParsed = new UAParser(userAgent);
+export function generateUAId(userAgent: string) {
+  const uaParsed = new UAParser(userAgent ?? '');
   const client = uaParsed.getResult();
-  const data = {
+  const uAData = {
     browser: client.browser.name,
     cpu: client.cpu.architecture,
     platform: client.device.type || 'desktop',
@@ -49,14 +48,14 @@ export function generateClientId(userAgent: string = '') {
     engine: client.engine.name,
     os: `${client.os.name} v-${client.os.version}`
   };
-  const stringData = JSON.stringify(data);
+  const stringData = JSON.stringify(uAData);
   const secret = process.env.USER_AGENT_SECRET;
   const divider = process.env.USER_AGENT_DIVIDER;
-  const clientId = Buffer.from(`${secret}${divider}${stringData}`).toString(
+  const uAId = Buffer.from(`${secret}${divider}${stringData}`).toString(
     'base64'
   );
 
-  return { clientId, restructuredUserAgent: data };
+  return { uAId, uAData };
 }
 
 export function getUserAgentData(clientId: string) {
