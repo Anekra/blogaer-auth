@@ -1,21 +1,18 @@
 import { APIError, ErrCode } from 'encore.dev/api';
 import bcryptjs from 'bcryptjs';
 import jwt, { JwtPayload, VerifyErrors } from 'jsonwebtoken';
-import {
-  AccessDecoded,
-  AuthData,
-  DefaultRes,
-  RefreshDecoded
-} from '../../../../types';
+import { AccessDecoded, DefaultRes, RefreshDecoded } from '../../../../types';
 import { MainModel } from '../../../../models/main-model';
-import { catchError, generateClientId } from '../../../../utils/helper';
+import {
+  catchError,
+  generateClientId as generateUAId
+} from '../../../../utils/helper';
 import { APICallMeta, currentRequest } from 'encore.dev';
 import { LoginReq, RegisterReq, XAuthReq } from '../../../../types/request';
 import { col, fn, Op, where } from 'sequelize';
 import jwtService from '../services/jwt-service';
 import User from '../../../../models/user';
 import Token from '../../../../models/token';
-import { getAuthData } from 'encore.dev/internal/codegen/auth';
 
 const authController = {
   async register({
@@ -68,7 +65,7 @@ const authController = {
         { expiresIn: '1d' }
       );
 
-      const { clientId } = generateClientId(userAgent);
+      const { uAId: clientId } = generateUAId(userAgent);
       if (!clientId) {
         console.warn('REGISTER auth-controller >> User agent is empty!');
         throw new APIError(
@@ -101,7 +98,6 @@ const authController = {
   },
   async login({
     userAgent,
-    refreshToken,
     emailOrUsername,
     password
   }: LoginReq): Promise<DefaultRes> {
@@ -130,73 +126,62 @@ const authController = {
       throw new APIError(ErrCode.InvalidArgument, 'Password is incorrect!');
     }
     try {
-      if (user.id) {
-        const [accessToken, newRefreshToken] = await jwtService.generateJwt(
-          user.username,
-          user.roleId,
-          user.id
-        );
+      if (!user.id) return APIError.notFound('User not found!');
 
-        const { clientId } = generateClientId(userAgent);
-        if (!clientId) {
-          console.warn('LOGIN auth-controller >> User agent is empty!');
-          throw new APIError(ErrCode.InvalidArgument, 'User agent is empty!');
-        }
-        await model.token.create({
-          refresh: newRefreshToken,
-          access: accessToken,
-          userId: user.id,
-          clientId
-        });
-
-        return {
-          status: 'Success',
-          data: {
-            username: user.username,
-            name: user.name,
-            email: user.email,
-            desc: user.description,
-            role: user.roleId === 1 ? 'Admin' : 'Author',
-            img: user.picture,
-            access: accessToken,
-            refresh: newRefreshToken
-          }
-        };
-      } else {
-        const deletedToken = await model.token.destroy({
-          where: { refresh: refreshToken }
-        });
-        console.warn(
-          'LOGIN auth-controller deleted refresh token after reuse detected >>',
-          deletedToken
-        );
-
-        throw new APIError(ErrCode.PermissionDenied, 'Token reuse detected!');
+      const [accessToken, newRefreshToken] = await jwtService.generateJwt(
+        user.username,
+        user.roleId,
+        user.id
+      );
+      const { uAId } = generateUAId(userAgent);
+      if (!uAId) {
+        console.warn('LOGIN auth-controller >> User agent is empty!');
+        throw new APIError(ErrCode.InvalidArgument, 'User agent is empty!');
       }
+      await model.token.create({
+        refresh: newRefreshToken,
+        access: accessToken,
+        userId: user.id,
+        clientId: uAId
+      });
+
+      return {
+        status: 'Success',
+        data: {
+          username: user.username,
+          name: user.name,
+          email: user.email,
+          desc: user.description,
+          role: user.roleId === 1 ? 'Admin' : 'Author',
+          img: user.picture,
+          access: accessToken,
+          refresh: newRefreshToken
+        }
+      };
     } catch (error) {
       const [err] = catchError('LOGIN auth-controller', error);
       throw err;
     }
   },
   async refreshToken({ xAuth }: XAuthReq) {
+    if (!xAuth.startsWith('Bearer')) return null;
     const callMeta = currentRequest() as APICallMeta;
     const model = callMeta.middlewareData?.mainModel as MainModel;
+    let decodedUsername = '';
+    let refreshToken = '';
     try {
-      if (!xAuth.startsWith('Bearer')) return null;
       const clientId = xAuth.split(' ')[1];
-      if (!clientId || clientId === 'undefined' || clientId === 'null') return null;
+      if (!clientId || clientId === 'undefined') {
+        return APIError.unauthenticated('Missing clientId!');
+      }
 
       const token = await model.token.findOne({
-        where: {
-          clientId,
-          access: {
-            [Op.gte]: new Date(Date.now() - 15 * 60 * 1000)
-          }
-        }
+        where: { clientId }
       });
-      if (!token) return null;
+      if (!token) return APIError.permissionDenied('Token not found!');
 
-      const foundToken = (await model.token.findByPk(token.refresh, {
+      refreshToken = token.refresh;
+      const foundToken = (await model.token.findByPk(refreshToken, {
         include: [
           {
             model: model.user,
@@ -205,157 +190,135 @@ const authController = {
         ]
       })) as Token & { User: User };
 
-      // Refresh token reuse detection!
-      jwt.verify(
-        refreshToken,
-        `${process.env.REFRESH_TOKEN_SECRET}`,
-        async (err: VerifyErrors | null, decoded?: string | JwtPayload) => {
-          const decodedToken = decoded as AccessDecoded;
-          const decodedTokenUsername = decodedToken?.UserInfo.username;
-          if (!foundToken) {
-            if (err) {
-              console.warn(
-                'REFRESH TOKEN auth-controller >>',
-                'Refresh token reuse detected: No user was found!'
-              );
-
-              throw new APIError(
-                ErrCode.PermissionDenied,
-                'No user was found!'
-              );
-            }
-
-            if (decodedTokenUsername) {
-              const hackedUser = await model.user.findOne({
-                where: {
-                  username: decodedToken.UserInfo.username
-                }
-              });
-              if (hackedUser) {
-                const deletedTokens = await model.token.destroy({
-                  where: {
-                    userId: hackedUser.id
-                  }
-                });
-                console.warn(
-                  'REFRESH TOKEN auth-controller >>',
-                  `Reuse detected, deleting ${hackedUser.username}'s tokens:`,
-                  deletedTokens
-                );
-              }
-            }
-
-            console.warn(
-              'REFRESH TOKEN auth-controller >> Refresh token reuse detected!'
-            );
-
-            throw new APIError(
-              ErrCode.PermissionDenied,
-              'Refresh token reuse detected!'
-            );
-          }
-          if (err) {
-            if (decodedTokenUsername) {
-              const deletedTokens = await model.token.destroy({
-                where: {
-                  refresh: refreshToken
-                }
-              });
-              console.warn(
-                'REFRESH TOKEN auth-controller >>',
-                `Session expired, deleting ${decodedTokenUsername}'s tokens:`,
-                deletedTokens
-              );
-
-              return new APIError(
-                ErrCode.PermissionDenied,
-                `User ${decodedTokenUsername}'s token expires.`
-              );
-            } else {
-              console.warn(
-                'REFRESH TOKEN auth-controller >>',
-                `Error!: ${err}`
-              );
-
-              return new APIError(ErrCode.Internal, `Error!: ${err.message}`);
-            }
-          }
-          const foundTokenUsername = foundToken.User.username;
-          if (foundTokenUsername && decodedTokenUsername) {
-            if (foundTokenUsername !== decodedTokenUsername) {
-              console.warn(
-                'REFRESH TOKEN auth-controller >>',
-                `Found token ${foundTokenUsername} and decoded token ${decodedTokenUsername} don't match!`
-              );
-
-              return new APIError(
-                ErrCode.PermissionDenied,
-                "Tokens don't match!"
-              );
-            }
-
-            // Refresh token is still valid
-            const userRole = await model.userRole.findOne({
-              where: { id: foundToken.User.roleId },
-              attributes: ['role']
-            });
-            const accessToken = jwt.sign(
-              {
-                UserInfo: {
-                  id: decodedToken.UserInfo.id,
-                  username: decodedToken.UserInfo.username,
-                  role: userRole?.role
-                }
-              },
-              'session_jwt',
-              { expiresIn: '15m' }
-            );
-            const newRefreshToken = jwt.sign(
-              {
-                UserInfo: {
-                  id: decodedToken.UserInfo.id,
-                  username: decodedToken.UserInfo.username
-                }
-              },
-              'session_token',
-              { expiresIn: '1d' }
-            );
-            await model.token.update(
-              { refresh: newRefreshToken, access: accessToken },
-              { where: { refresh: refreshToken } }
-            );
-
-            return {
-              status: 'Created',
-              message: 'New refresh token created successfully',
-              data: {
-                username: decodedToken.UserInfo.username,
-                access: accessToken,
-                refresh: newRefreshToken
-              }
-            };
-          }
-        }
-      );
-
-      const foundTokens = jwt.verify(
+      const decodedToken = jwt.verify(
         refreshToken,
         `${process.env.REFRESH_TOKEN_SECRET}`
       ) as (string | jwt.JwtPayload) & RefreshDecoded;
-      if (!foundTokens)
-        throw APIError.permissionDenied('Invalid refresh token!');
-      const decodedUsername = foundTokens.UserInfo.username;
+      const decodedUsernames = decodedToken.UserInfo.username;
+
+      // Refresh token reuse detection!
+      if (!foundToken) {
+        if (decodedUsernames) {
+          const hackedUser = await model.user.findOne({
+            where: {
+              username: decodedToken.UserInfo.username
+            }
+          });
+          if (hackedUser) {
+            const deletedTokens = await model.token.destroy({
+              where: {
+                userId: hackedUser.id
+              }
+            });
+            console.warn(
+              'REFRESH TOKEN auth-controller >>',
+              `Reuse detected, deleting ${hackedUser.username}'s tokens:`,
+              deletedTokens
+            );
+          }
+        }
+
+        console.warn(
+          'REFRESH TOKEN auth-controller >> Refresh token reuse detected!'
+        );
+
+        throw new APIError(
+          ErrCode.PermissionDenied,
+          'Refresh token reuse detected!'
+        );
+      }
+
+      const foundUsername = foundToken.User.username;
+      if (foundUsername && decodedUsername) {
+        if (foundUsername !== decodedUsername) {
+          console.warn(
+            'REFRESH TOKEN auth-controller >>',
+            `Found token ${foundUsername} and decoded token ${decodedUsername} don't match!`
+          );
+
+          return new APIError(ErrCode.PermissionDenied, "Tokens don't match!");
+        }
+
+        // Refresh token is still valid
+        const userRole = await model.userRole.findOne({
+          where: { id: foundToken.User.roleId },
+          attributes: ['role']
+        });
+        const [accessToken, newRefreshToken] = await jwtService.generateJwt(
+          foundUsername,
+          foundToken.User.roleId,
+          foundToken.User.id
+        );
+        await model.token.update(
+          { refresh: newRefreshToken, access: accessToken },
+          { where: { refresh: refreshToken } }
+        );
+
+        return {
+          status: 'Created',
+          message: 'New refresh token created successfully',
+          data: {
+            username: decodedToken.UserInfo.username,
+            access: accessToken,
+            refresh: newRefreshToken
+          }
+        };
+      }
     } catch (error) {
+      if (error instanceof jwt.JsonWebTokenError) {
+        console.error(
+          'REFRESH TOKEN auth-controller >> Invalid JWT:',
+          error.message
+        );
+
+        return new APIError(
+          ErrCode.PermissionDenied,
+          'Invalid refresh token signature!'
+        );
+      }
+      if (error instanceof jwt.NotBeforeError) {
+        console.error('REFRESH TOKEN auth-controller >> Token not yet active.');
+
+        throw APIError.invalidArgument(
+          'Token is not active yet! Please try again later.'
+        );
+      }
+      if (error instanceof jwt.TokenExpiredError) {
+        if (decodedUsername) {
+          const deletedTokens = await model.token.destroy({
+            where: {
+              refresh: refreshToken
+            }
+          });
+          console.error(
+            'REFRESH TOKEN auth-controller >>',
+            `Session expired, deleting ${decodedUsername}'s tokens:`,
+            deletedTokens
+          );
+
+          throw APIError.permissionDenied('refresh token expired!');
+        }
+      }
       const [err] = catchError('REFRESH TOKEN auth-controller', error);
+
       throw err;
     }
   },
-  async logout({ refreshToken }: RefreshTokenReq) {
+  async logout({ xAuth }: XAuthReq) {
     try {
       const callMeta = currentRequest() as APICallMeta;
       const model = callMeta.middlewareData?.mainModel as MainModel;
+      const clientId = xAuth.split(' ')[1];
+      if (!clientId || clientId === 'undefined') {
+        return APIError.unauthenticated('Missing clientId!');
+      }
+
+      const token = await model.token.findOne({
+        where: { clientId }
+      });
+      if (!token) return APIError.permissionDenied('Token not found!');
       await model.token.destroy({
-        where: { refresh: refreshToken }
+        where: { refresh: token.refresh }
       });
 
       return;
@@ -364,11 +327,21 @@ const authController = {
       throw err;
     }
   },
-  async checkUsername({ refreshToken }: RefreshTokenReq) {
+  async checkUsername({ xAuth }: XAuthReq) {
     try {
       const callMeta = currentRequest() as APICallMeta;
       const model = callMeta.middlewareData?.mainModel as MainModel;
-      const foundToken = (await model.token.findByPk(refreshToken.value, {
+      const clientId = xAuth.split(' ')[1];
+      if (!clientId || clientId === 'undefined') {
+        throw APIError.unauthenticated('Missing clientId!');
+      }
+
+      const token = await model.token.findOne({
+        where: { clientId }
+      });
+      if (!token) throw APIError.permissionDenied('Token not found!');
+
+      const foundToken = (await model.token.findByPk(token.refresh, {
         attributes: ['token'],
         include: {
           model: model.user,
