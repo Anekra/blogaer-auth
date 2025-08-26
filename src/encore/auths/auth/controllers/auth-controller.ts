@@ -1,19 +1,21 @@
 import { APIError, ErrCode } from 'encore.dev/api';
 import bcryptjs from 'bcryptjs';
 import jwt, { JwtPayload, VerifyErrors } from 'jsonwebtoken';
-import { AccessDecoded, DefaultRes } from '../../../../types';
+import {
+  AccessDecoded,
+  AuthData,
+  DefaultRes,
+  RefreshDecoded
+} from '../../../../types';
 import { MainModel } from '../../../../models/main-model';
 import { catchError, generateClientId } from '../../../../utils/helper';
 import { APICallMeta, currentRequest } from 'encore.dev';
-import {
-  LoginReq,
-  RefreshTokenReq,
-  RegisterReq
-} from '../../../../types/request';
+import { LoginReq, RegisterReq, XAuthReq } from '../../../../types/request';
 import { col, fn, Op, where } from 'sequelize';
 import jwtService from '../services/jwt-service';
 import User from '../../../../models/user';
 import Token from '../../../../models/token';
+import { getAuthData } from 'encore.dev/internal/codegen/auth';
 
 const authController = {
   async register({
@@ -176,11 +178,25 @@ const authController = {
       throw err;
     }
   },
-  async refreshToken({ refreshToken }: RefreshTokenReq) {
+  async refreshToken({ xAuth }: XAuthReq) {
+    const callMeta = currentRequest() as APICallMeta;
+    const model = callMeta.middlewareData?.mainModel as MainModel;
     try {
-      const callMeta = currentRequest() as APICallMeta;
-      const model = callMeta.middlewareData?.mainModel as MainModel;
-      const foundToken = (await model.token.findByPk(refreshToken.value, {
+      if (!xAuth.startsWith('Bearer')) return null;
+      const clientId = xAuth.split(' ')[1];
+      if (!clientId || clientId === 'undefined' || clientId === 'null') return null;
+
+      const token = await model.token.findOne({
+        where: {
+          clientId,
+          access: {
+            [Op.gte]: new Date(Date.now() - 15 * 60 * 1000)
+          }
+        }
+      });
+      if (!token) return null;
+
+      const foundToken = (await model.token.findByPk(token.refresh, {
         include: [
           {
             model: model.user,
@@ -191,7 +207,7 @@ const authController = {
 
       // Refresh token reuse detection!
       jwt.verify(
-        refreshToken.value,
+        refreshToken,
         `${process.env.REFRESH_TOKEN_SECRET}`,
         async (err: VerifyErrors | null, decoded?: string | JwtPayload) => {
           const decodedToken = decoded as AccessDecoded;
@@ -321,6 +337,14 @@ const authController = {
           }
         }
       );
+
+      const foundTokens = jwt.verify(
+        refreshToken,
+        `${process.env.REFRESH_TOKEN_SECRET}`
+      ) as (string | jwt.JwtPayload) & RefreshDecoded;
+      if (!foundTokens)
+        throw APIError.permissionDenied('Invalid refresh token!');
+      const decodedUsername = foundTokens.UserInfo.username;
     } catch (error) {
       const [err] = catchError('REFRESH TOKEN auth-controller', error);
       throw err;

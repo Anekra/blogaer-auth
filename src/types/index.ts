@@ -1,4 +1,4 @@
-import { APIError } from 'encore.dev/api';
+import { APIError, Header } from 'encore.dev/api';
 
 export type DefaultRes =
   | {
@@ -43,3 +43,10 @@ export type Social = {
 };
 
 export type AnyObj = { [key: string]: any };
+
+export interface AuthData {
+  userID: string;
+  username: string;
+  role: string;
+  refreshToken: string;
+}

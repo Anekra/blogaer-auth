@@ -1,24 +1,12 @@
-import { Gateway, Header } from 'encore.dev/api';
+import { Gateway } from 'encore.dev/api';
 import { authHandler } from 'encore.dev/auth';
 import mainModel from '../../../models/main-model';
 import { Op } from 'sequelize';
 import jwt from 'jsonwebtoken';
-import { AccessDecoded } from '../../../types';
+import { AuthReq } from '../../../types/request';
+import { AccessDecoded, AuthData } from '../../../types';
 
-interface AuthParams {
-  authorization: Header<'Authorization'>;
-}
-
-interface AuthData {
-  userID: string;
-  username: string;
-  role: string;
-  refreshToken: string;
-}
-
-async function mainAuth({
-  authorization
-}: AuthParams): Promise<AuthData | null> {
+async function mainAuth({ authorization }: AuthReq): Promise<AuthData | null> {
   if (!authorization.startsWith('Bearer')) return null;
   const clientId = authorization.split(' ')[1];
   if (!clientId || clientId === 'undefined' || clientId === 'null') return null;
@@ -39,7 +27,7 @@ async function mainAuth({
     accessToken,
     `${process.env.ACCESS_TOKEN_SECRET}`
   ) as (string | jwt.JwtPayload) & AccessDecoded;
-  if (foundToken.hasOwnProperty('UserInfo') === false) return null;
+  if (!foundToken.hasOwnProperty('UserInfo')) return null;
 
   return {
     userID: foundToken.UserInfo.id,
@@ -49,8 +37,6 @@ async function mainAuth({
   };
 }
 
-export const auth = authHandler<AuthParams, AuthData>(mainAuth);
+export const auth = authHandler<AuthReq, AuthData>(mainAuth);
 
-export const getaway = new Gateway({
-  authHandler: auth
-});
+export const getaway = new Gateway({ authHandler: auth });

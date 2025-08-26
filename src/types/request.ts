@@ -2,133 +2,137 @@ import {
   AuthenticationResponseJSON,
   RegistrationResponseJSON
 } from '@simplewebauthn/server';
-import { Cookie, Header } from 'encore.dev/api';
+import { Header } from 'encore.dev/api';
 import { TwoFAMethod } from '../utils/enums';
 
-export type EmailOrUsernameReq = {
+export interface AuthReq {
+  authorization: Header<'authorization'>;
+}
+
+export interface XAuthReq {
+  xAuth: Header<'x-authorization'>;
+}
+
+export interface EmailOrUsernameReq {
   emailOrUsername: string;
-};
+}
 
-export type UsernameReq = {
+export interface UsernameReq {
   username: string;
-};
+}
 
-export type UAReq = {
+export interface UAReq {
   userAgent: Header<'User-Agent'>;
-};
+}
 
-export type RefreshTokenReq = {
-  refreshToken: Cookie<'session_token'>;
-};
-
-export type RegisterReq = {
+export interface RegisterReq extends UsernameReq, UAReq {
   email: string;
   password: string;
-} & UsernameReq &
-  UAReq;
+}
 
-export type LoginReq = {
+export interface LoginReq extends EmailOrUsernameReq, UAReq {
   password: string;
-} & EmailOrUsernameReq &
-  RefreshTokenReq &
-  UAReq;
+}
 
-export type DeleteSavedAccountReq = UsernameReq & UAReq;
+export interface DeleteSavedAccountReq extends UsernameReq, UAReq {}
 
-export type AuthAppLoginReq = {
+export interface AuthAppLoginReq extends UAReq, EmailOrUsernameReq {
   token: string;
-} & UAReq &
-  EmailOrUsernameReq;
+}
 
-export type VerifyAuthAppReq = {
+export interface VerifyAuthAppReq {
   token: string;
   secretId: string;
-};
+}
 
-export type WebauthnGenerateLoginReq = EmailOrUsernameReq & UAReq;
+export interface WebauthnGenerateLoginReq extends EmailOrUsernameReq, UAReq {}
 
-export type WebauthnVerifyLoginReq = {
+export interface WebauthnVerifyLoginReq extends UAReq {
   option: AuthenticationResponseJSON;
-} & UAReq;
+}
 
-export type WebauthnLoginReq = {
+export interface WebauthnLoginReq extends EmailOrUsernameReq, UAReq {
   optionId: string;
-} & EmailOrUsernameReq &
-  UAReq;
+}
 
-export type WebauthnVerifyRegisterReq = {
+export interface WebauthnVerifyRegisterReq extends UAReq {
   options: RegistrationResponseJSON;
-} & RefreshTokenReq &
-  UAReq;
+}
 
-export type PatchAccount = {
+export interface PatchAccountReq extends UsernameReq {
   email: string;
   name: string;
   description: string;
   picture: string;
-} & UsernameReq;
+}
 
-export type PatchSocialReq = { social: string; link: string };
+export interface PatchSocialReq {
+  social: string;
+  link: string;
+}
 
-export type PatchSettingReq = {
+export interface PatchSettingReq {
   twoFaEnabled: boolean;
   twoFaMethod?: TwoFAMethod;
   preference: string;
-};
+}
 
-export type AddOrResetPasswordReq = {
+export interface AddOrResetPasswordReq extends UAReq {
   password: string;
   subject: string;
   limit: string;
-} & UAReq;
+}
 
-export type SendAddPasswordLinkReq = {
+export interface SendAddPasswordLinkReq {
   origin: Header<'origin'>;
-} & RefreshTokenReq;
+}
 
-export type SendUpdateEmailOtpReq = {
+export interface SendUpdateEmailOtpReq {
   email: string;
   request: string;
   limit: string;
-};
+}
 
-export type GetUpdateEmailOtpTime = { request: string; limit: string } & UAReq;
+export interface GetUpdateEmailOtpTime extends UAReq {
+  request: string;
+  limit: string;
+}
 
-export type AddPostReq = {
+export interface AddPostReq {
   title: string;
   text: string;
   content: any[];
   tags: string;
-};
+}
 
-export type PatchPostReq = {
+export interface PatchPostReq extends AddPostReq {
   id: string;
-} & AddPostReq;
+}
 
-export type PostsByPageReq = {
+export interface PostsByPageReq {
   number: number;
   size: number;
   query: any[];
   categories: string[];
   tags: string[];
-};
+}
 
-export type PostByIdReq = {
+export interface PostByIdReq {
   id: string;
-};
+}
 
-export type DraftsByPageReq = {
+export interface DraftsByPageReq {
   number: number;
   size: number;
   query: any[];
-};
+}
 
-export type AddDraftReq = {
+export interface AddDraftReq {
   title: string;
   text: string;
   content: any[];
-};
+}
 
-export type PatchDraftReq = {
+export interface PatchDraftReq extends AddDraftReq {
   id: string;
-} & AddDraftReq;
+}
