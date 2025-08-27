@@ -7,7 +7,7 @@ export const getAccount = api(
     path: '/auth-service/v1/user/account',
     auth: true,
     expose: true,
-    tags: ['verify-refresh-token', 'verify-access-token', 'main-model']
+    tags: ['main-model']
   },
   userController.getAccount
 );
@@ -18,7 +18,7 @@ export const patchAccount = api(
     path: '/auth-service/v1/user/account',
     auth: true,
     expose: true,
-    tags: ['verify-refresh-token', 'verify-access-token', 'main-model']
+    tags: ['main-model']
   },
   userController.patchAccount
 );
@@ -29,12 +29,7 @@ export const patchAccountEmail = api(
     path: '/auth-service/v1/user/account/update-email',
     auth: true,
     expose: true,
-    tags: [
-      'verify-refresh-token',
-      'verify-access-token',
-      'verify-request-form-otp',
-      'main-model'
-    ]
+    tags: ['verify-request-form-otp', 'main-model']
   },
   userController.patchAccount
 );
@@ -45,12 +40,7 @@ export const patchAccountUsername = api(
     path: '/auth-service/v1/user/account/update-username',
     auth: true,
     expose: true,
-    tags: [
-      'verify-refresh-token',
-      'verify-access-token',
-      'verify-request-form',
-      'main-model'
-    ]
+    tags: ['verify-request-form', 'main-model']
   },
   userController.patchAccount
 );

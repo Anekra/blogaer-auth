@@ -7,7 +7,7 @@ export const sendAddPasswordLink = api(
     path: '/auth-service/v1/email/user/add-password',
     auth: true,
     expose: true,
-    tags: ['verify-refresh-token', 'verify-access-token', 'main-model']
+    tags: ['main-model']
   },
   emailController.sendAddPasswordLink
 );
@@ -18,7 +18,7 @@ export const sendResetPasswordLink = api(
     path: '/auth-service/v1/email/user/reset-password',
     auth: true,
     expose: true,
-    tags: ['verify-refresh-token', 'verify-access-token', 'main-model']
+    tags: ['main-model']
   },
   emailController.sendResetPasswordLink
 );
@@ -29,7 +29,7 @@ export const sendUpdateEmailLink = api(
     path: '/auth-service/v1/email/user/update-email',
     auth: true,
     expose: true,
-    tags: ['verify-refresh-token', 'verify-access-token', 'main-model']
+    tags: ['main-model']
   },
   emailController.sendUpdateEmailLink
 );
@@ -40,7 +40,7 @@ export const sendUpdateUsernameLink = api(
     path: '/auth-service/v1/email/user/update-username',
     auth: true,
     expose: true,
-    tags: ['verify-refresh-token', 'verify-access-token', 'main-model']
+    tags: ['main-model']
   },
   emailController.sendUpdateUsernameLink
 );
@@ -51,7 +51,7 @@ export const sendUpdateEmailOtp = api(
     path: '/auth-service/v1/email/user/update-email-otp',
     auth: true,
     expose: true,
-    tags: ['verify-refresh-token', 'verify-access-token', 'main-model']
+    tags: ['main-model']
   },
   emailController.sendUpdateEmailOtp
 );
@@ -62,7 +62,7 @@ export const getUpdateEmailOtpTime = api(
     path: '/auth-service/v1/email/user/update-email/otp-time',
     auth: true,
     expose: true,
-    tags: ['verify-refresh-token', 'verify-access-token', 'main-model']
+    tags: ['main-model']
   },
   emailController.getUpdateEmailOtpTime
 );

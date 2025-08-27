@@ -7,7 +7,7 @@ export const getSecurity = api(
     path: '/auth-service/v1/user/security',
     auth: true,
     expose: true,
-    tags: ['verify-refresh-token', 'verify-access-token', 'main-model']
+    tags: ['main-model']
   },
   userController.getSecurity
 );
@@ -18,7 +18,7 @@ export const addOrResetPassword = api(
     path: '/auth-service/v1/user/security/add-or-reset-password',
     auth: true,
     expose: true,
-    tags: ['verify-refresh-token', 'verify-access-token', 'main-model']
+    tags: ['main-model']
   },
   userController.addOrResetPassword
 );

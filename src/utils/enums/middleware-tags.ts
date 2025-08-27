@@ -1,7 +1,5 @@
 enum AuthMiddlewareTag {
-  VerifyOauthCode = 'verify-oauth-code',
-  VerifyRefreshToken = 'verify-refresh-token',
-  VerifyAccessToken = 'verify-access-token'
+  VerifyOauthCode = 'verify-oauth-code'
 }
 
 enum FormMiddlewareTag {

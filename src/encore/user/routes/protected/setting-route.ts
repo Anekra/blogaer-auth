@@ -7,7 +7,7 @@ export const patchSetting = api(
     path: '/auth-service/v1/user/setting',
     auth: true,
     expose: true,
-    tags: ['verify-refresh-token', 'verify-access-token', 'main-model']
+    tags: ['main-model']
   },
   userController.patchSetting
 );

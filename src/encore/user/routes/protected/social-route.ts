@@ -7,7 +7,7 @@ export const getSocials = api(
     path: '/auth-service/v1/user/social',
     auth: true,
     expose: true,
-    tags: ['verify-refresh-token', 'verify-access-token', 'main-model']
+    tags: ['main-model']
   },
   userController.getSocial
 );
@@ -18,7 +18,7 @@ export const patchSocial = api(
     path: '/auth-service/v1/user/social',
     auth: true,
     expose: true,
-    tags: ['verify-refresh-token', 'verify-access-token', 'main-model']
+    tags: ['main-model']
   },
   userController.patchSocial
 );

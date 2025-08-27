@@ -7,13 +7,7 @@ export const getPostsByUserId = api.raw(
     path: '/auth-service/v1/post/user',
     auth: true,
     expose: true,
-    tags: [
-      'main-model',
-      'verify-refresh-token',
-      'verify-access-token',
-      'init-rpc-chan',
-      'verify-author'
-    ]
+    tags: ['main-model', 'init-rpc-chan', 'verify-author']
   },
   postController.getPostsByUserId
 );
@@ -24,13 +18,7 @@ export const addPost = api.raw(
     path: '/auth-service/v1/post',
     auth: true,
     expose: true,
-    tags: [
-      'main-model',
-      'verify-refresh-token',
-      'verify-access-token',
-      'init-rpc-chan',
-      'verify-author'
-    ]
+    tags: ['main-model', 'init-rpc-chan', 'verify-author']
   },
   postController.addPost
 );
@@ -41,13 +29,7 @@ export const patchPost = api.raw(
     path: '/auth-service/v1/post',
     auth: true,
     expose: true,
-    tags: [
-      'main-model',
-      'verify-refresh-token',
-      'verify-access-token',
-      'init-topic-chan',
-      'verify-author'
-    ]
+    tags: ['main-model', 'init-topic-chan', 'verify-author']
   },
   postController.patchPost
 );
@@ -58,13 +40,7 @@ export const deletePost = api.raw(
     path: '/auth-service/v1/post/:id',
     auth: true,
     expose: true,
-    tags: [
-      'main-model',
-      'verify-refresh-token',
-      'verify-access-token',
-      'init-topic-chan',
-      'verify-author'
-    ]
+    tags: ['main-model', 'init-topic-chan', 'verify-author']
   },
   postController.deletePost
 );

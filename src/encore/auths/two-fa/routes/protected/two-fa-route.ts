@@ -9,12 +9,7 @@ export const generateRegisterWebauthn = api(
     path: '/auth-service/v1/auth/two-fa/webauthn/register/generate',
     auth: true,
     expose: true,
-    tags: [
-      'verify-refresh-token',
-      'verify-access-token',
-      'main-model',
-      'in-memory-model'
-    ]
+    tags: ['main-model', 'in-memory-model']
   },
   webauthnController.generateRegisterWebauthn
 );
@@ -25,12 +20,7 @@ export const verifyRegisterWebauthn = api(
     path: '/auth-service/v1/auth/two-fa/webauthn/register/verify',
     auth: true,
     expose: true,
-    tags: [
-      'verify-refresh-token',
-      'verify-access-token',
-      'main-model',
-      'in-memory-model'
-    ]
+    tags: ['main-model', 'in-memory-model']
   },
   webauthnController.verifyRegisterWebauthn
 );
@@ -41,7 +31,7 @@ export const deleteWebauthnPasskey = api(
     path: '/auth-service/v1/auth/two-fa/webauthn/passkey',
     auth: true,
     expose: true,
-    tags: ['verify-refresh-token', 'verify-access-token', 'main-model']
+    tags: ['main-model']
   },
   webauthnController.deleteWebauthnPasskey
 );
@@ -52,12 +42,7 @@ export const registerAuthApp = api(
     path: '/auth-service/v1/auth/two-fa/authapp/register',
     auth: true,
     expose: true,
-    tags: [
-      'verify-refresh-token',
-      'verify-access-token',
-      'main-model',
-      'in-memory-model'
-    ]
+    tags: ['main-model', 'in-memory-model']
   },
   authAppController.registerAuthApp
 );
@@ -68,12 +53,7 @@ export const verifyAuthApp = api(
     path: '/auth-service/v1/auth/two-fa/authapp/verify',
     auth: true,
     expose: true,
-    tags: [
-      'verify-refresh-token',
-      'verify-access-token',
-      'main-model',
-      'in-memory-model'
-    ]
+    tags: ['main-model', 'in-memory-model']
   },
   authAppController.verifyAuthApp
 );
@@ -84,7 +64,7 @@ export const getAuthAppToken = api<UsernameReq>(
     path: '/auth-service/v1/auth/two-fa/authapp/:username',
     auth: true,
     expose: true,
-    tags: ['verify-refresh-token', 'verify-access-token', 'main-model']
+    tags: ['main-model']
   },
   authAppController.getAuthAppToken
 );
@@ -95,7 +75,7 @@ export const deleteAuthAppSecret = api(
     path: '/auth-service/v1/auth/two-fa/authapp',
     auth: true,
     expose: true,
-    tags: ['verify-refresh-token', 'verify-access-token', 'main-model']
+    tags: ['main-model']
   },
   authAppController.deleteAuthAppSecret
 );
