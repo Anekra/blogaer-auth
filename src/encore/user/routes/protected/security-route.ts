@@ -5,7 +5,7 @@ export const getSecurity = api(
   {
     method: 'GET',
     path: '/auth-service/v1/user/security',
-    auth: false, // will change to true later
+    auth: true,
     expose: true,
     tags: ['verify-refresh-token', 'verify-access-token', 'main-model']
   },
@@ -16,7 +16,7 @@ export const addOrResetPassword = api(
   {
     method: 'POST',
     path: '/auth-service/v1/user/security/add-or-reset-password',
-    auth: false, // will change to true later
+    auth: true,
     expose: true,
     tags: ['verify-refresh-token', 'verify-access-token', 'main-model']
   },

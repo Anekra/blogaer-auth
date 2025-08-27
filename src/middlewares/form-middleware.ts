@@ -39,10 +39,10 @@ const formMiddleware = {
       const { otp, request, limit } =
         requestMeta.parsedPayload as FormOtpPayload;
       const model = req.data.mainModel as MainModel;
-      const { uAId: clientId } = generateUAId(
+      const { uAId } = generateUAId(
         requestMeta.headers['user-agent'] as string
       );
-      if (!clientId) {
+      if (!uAId) {
         console.warn(
           'VERIFY REQUEST FORM OTP form-middleware >> User agent is invalid!'
         );
@@ -52,7 +52,7 @@ const formMiddleware = {
       const foundRequest = await model.userFormRequest.findOne({
         where: {
           userId: req.data.userId,
-          clientId,
+          clientId: uAId,
           request,
           limit: new Date(Number(limit)),
           otp
@@ -114,10 +114,10 @@ const formMiddleware = {
       const requestMeta = req.requestMeta as APICallMeta;
       const { request, limit } = requestMeta.parsedPayload as FormPayload;
       const model = req.data.mainModel as MainModel;
-      const { uAId: clientId } = generateUAId(
+      const { uAId } = generateUAId(
         requestMeta.headers['user-agent'] as string
       );
-      if (!clientId) {
+      if (!uAId) {
         console.warn(
           'VERIFY REQUEST FORM user-middleware >> User agent is invalid!'
         );
@@ -127,7 +127,7 @@ const formMiddleware = {
       const foundRequest = await model.userFormRequest.findOne({
         where: {
           userId: req.data.userId,
-          clientId,
+          clientId: uAId,
           request,
           limit: new Date(Number(limit))
         }

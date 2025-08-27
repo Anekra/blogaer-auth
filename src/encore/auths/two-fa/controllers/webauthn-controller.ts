@@ -5,14 +5,13 @@ import {
   UsernameReq,
   WebauthnLoginReq,
   WebauthnVerifyLoginReq,
-  WebauthnVerifyRegisterReq,
-  RefreshTokenReq
+  WebauthnVerifyRegisterReq
 } from '../../../../types/request';
 import { col, fn, Op, where } from 'sequelize';
 import User from '../../../../models/user';
 import { APIError, ErrCode } from 'encore.dev/api';
 import jwtService from '../../auth/services/jwt-service';
-import { catchError, generateUAId } from '../../../../utils/helper';
+import { catchError, generateUAId, getAuth } from '../../../../utils/helper';
 import UserPasskey from '../../../../models/user-passkey';
 import {
   generateAuthenticationOptions,
@@ -285,21 +284,12 @@ const webauthnController = {
           user.id
         );
 
-        const { uAId } = generateUAId(userAgent);
-        if (!uAId) {
-          console.warn(
-            'AUTH APP LOGIN webauthn-controller >> User agent is empty!'
-          );
-
-          throw new APIError(
-            ErrCode.InvalidArgument,
-            'No user-agent data provided!'
-          );
-        }
+        const clientId = crypto.randomUUID()
         await model.token.create({
-          token: newRefreshToken,
+          refresh: newRefreshToken,
+          access: accessToken,
           userId: user.id,
-          clientId: uAId
+          clientId
         });
 
         await inMemModel.webAuthnLoginOption.truncate({
@@ -310,14 +300,13 @@ const webauthnController = {
         return {
           status: 'Success',
           data: {
+            clientId,
             username: user.username,
             name: user.name,
             email: user.email,
             desc: user.description,
             role: user.roleId === 1 ? 'Admin' : 'Author',
-            img: user.picture,
-            access: accessToken,
-            refresh: newRefreshToken
+            img: user.picture
           }
         };
       }
@@ -386,7 +375,6 @@ const webauthnController = {
   },
   async verifyRegisterWebauthn({
     options,
-    refreshToken,
     userAgent
   }: WebauthnVerifyRegisterReq) {
     const callMeta = currentRequest() as APICallMeta;
@@ -432,6 +420,7 @@ const webauthnController = {
         expectedOrigin: 'http://localhost:3000',
         expectedRPID: 'localhost'
       });
+
       const { verified, registrationInfo } = verification;
       if (verified && registrationInfo) {
         const { credential, credentialDeviceType, credentialBackedUp } =
@@ -444,7 +433,9 @@ const webauthnController = {
         const existingPasskey = userPasskeys.find(
           (key) => key.id === credential.id
         );
-        const token = await model.token.findByPk(refreshToken.value, {
+
+        const authData = getAuth();
+        const token = await model.token.findByPk(authData.refreshToken, {
           attributes: ['clientId']
         });
         const clientId = token?.clientId;
@@ -470,7 +461,7 @@ const webauthnController = {
             clientBrowser,
             clientOs,
             isMobile,
-            publicKey: Buffer.from(credential.publicKey),
+            publicKey: new Uint8Array(Buffer.from(credential.publicKey)),
             counter: credential.counter,
             deviceType: credentialDeviceType,
             backedUp: credentialBackedUp,
@@ -497,12 +488,13 @@ const webauthnController = {
       throw err;
     }
   },
-  async deleteWebauthnPasskey({ refreshToken }: RefreshTokenReq) {
+  async deleteWebauthnPasskey() {
     try {
       const callMeta = currentRequest() as APICallMeta;
       const model = callMeta.middlewareData?.mainModel as MainModel;
       const userId = callMeta.middlewareData?.userId as string;
-      const token = await model.token.findByPk(refreshToken.value, {
+      const authData = getAuth();
+      const token = await model.token.findByPk(authData.refreshToken, {
         attributes: ['clientId']
       });
 

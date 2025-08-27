@@ -240,10 +240,6 @@ const authController = {
         }
 
         // Refresh token is still valid
-        const userRole = await model.userRole.findOne({
-          where: { id: foundToken.User.roleId },
-          attributes: ['role']
-        });
         const [accessToken, newRefreshToken] = await jwtService.generateJwt(
           foundUsername,
           foundToken.User.roleId,

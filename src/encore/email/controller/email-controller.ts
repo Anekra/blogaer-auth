@@ -5,21 +5,27 @@ import {
   SendAddPasswordLinkReq as SendEmailLinkReq,
   SendUpdateEmailOtpReq
 } from '../../../types/request';
-import mainModel, { MainModel } from '../../../models/main-model';
+import type { MainModel } from '../../../models/main-model';
 import { EmailSubject } from '../../../utils/enums';
-import { catchError, generateUAId, generateOtp } from '../../../utils/helper';
+import {
+  catchError,
+  generateUAId,
+  generateOtp,
+  getAuth
+} from '../../../utils/helper';
 import { APIError, ErrCode } from 'encore.dev/api';
 
 const emailController = {
-  async sendAddPasswordLink({ origin, refreshToken }: SendEmailLinkReq) {
+  async sendAddPasswordLink({ origin }: SendEmailLinkReq) {
     try {
       const callMeta = currentRequest() as APICallMeta;
       const userId = callMeta.middlewareData?.userId as string;
       const model = callMeta.middlewareData?.mainModel as MainModel;
+      const authData = getAuth();
       const { email, limit, html } = await emailService.handleEmailSubject(
         EmailSubject.AddPassword,
         userId,
-        refreshToken.value,
+        authData.refreshToken,
         model,
         origin
       );
@@ -39,15 +45,16 @@ const emailController = {
       throw err;
     }
   },
-  async sendResetPasswordLink({ origin, refreshToken }: SendEmailLinkReq) {
+  async sendResetPasswordLink({ origin }: SendEmailLinkReq) {
     try {
       const callMeta = currentRequest() as APICallMeta;
       const userId = callMeta.middlewareData?.userId as string;
       const model = callMeta.middlewareData?.mainModel as MainModel;
+      const authData = getAuth();
       const { email, limit, html } = await emailService.handleEmailSubject(
         EmailSubject.ResetPassword,
         userId,
-        refreshToken.value,
+        authData.refreshToken,
         model,
         origin
       );
@@ -67,15 +74,16 @@ const emailController = {
       throw err;
     }
   },
-  async sendUpdateEmailLink({ origin, refreshToken }: SendEmailLinkReq) {
+  async sendUpdateEmailLink({ origin }: SendEmailLinkReq) {
     try {
       const callMeta = currentRequest() as APICallMeta;
       const userId = callMeta.middlewareData?.userId as string;
       const model = callMeta.middlewareData?.mainModel as MainModel;
+      const authData = getAuth();
       const { email, limit, html } = await emailService.handleEmailSubject(
         EmailSubject.UpdateEmail,
         userId,
-        refreshToken.value,
+        authData.refreshToken,
         model,
         origin
       );
@@ -95,15 +103,16 @@ const emailController = {
       throw err;
     }
   },
-  async sendUpdateUsernameLink({ origin, refreshToken }: SendEmailLinkReq) {
+  async sendUpdateUsernameLink({ origin }: SendEmailLinkReq) {
     try {
       const callMeta = currentRequest() as APICallMeta;
       const userId = callMeta.middlewareData?.userId as string;
       const model = callMeta.middlewareData?.mainModel as MainModel;
+      const authData = getAuth();
       const { email, limit, html } = await emailService.handleEmailSubject(
         EmailSubject.UpdateUsername,
         userId,
-        refreshToken.value,
+        authData.refreshToken,
         model,
         origin
       );

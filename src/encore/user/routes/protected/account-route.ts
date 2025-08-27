@@ -5,7 +5,7 @@ export const getAccount = api(
   {
     method: 'GET',
     path: '/auth-service/v1/user/account',
-    auth: false, // will change to true later
+    auth: true,
     expose: true,
     tags: ['verify-refresh-token', 'verify-access-token', 'main-model']
   },
@@ -16,7 +16,7 @@ export const patchAccount = api(
   {
     method: 'PATCH',
     path: '/auth-service/v1/user/account',
-    auth: false, // will change to true later
+    auth: true,
     expose: true,
     tags: ['verify-refresh-token', 'verify-access-token', 'main-model']
   },
@@ -27,7 +27,7 @@ export const patchAccountEmail = api(
   {
     method: 'PATCH',
     path: '/auth-service/v1/user/account/update-email',
-    auth: false, // will change to true later
+    auth: true,
     expose: true,
     tags: [
       'verify-refresh-token',
@@ -43,7 +43,7 @@ export const patchAccountUsername = api(
   {
     method: 'PATCH',
     path: '/auth-service/v1/user/account/update-username',
-    auth: false, // will change to true later
+    auth: true,
     expose: true,
     tags: [
       'verify-refresh-token',

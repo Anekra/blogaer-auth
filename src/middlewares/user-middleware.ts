@@ -4,7 +4,7 @@ const userMiddleware = {
   verifyAuthor: middleware(
     {
       target: {
-        auth: false, // will change to true later
+        auth: true,
         tags: ['verify-author']
       }
     },

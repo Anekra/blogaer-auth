@@ -2,7 +2,6 @@ import { APICallMeta, currentRequest } from 'encore.dev';
 import { MainModel } from '../../../../models/main-model';
 import {
   AuthAppLoginReq,
-  RefreshTokenReq,
   UsernameReq,
   VerifyAuthAppReq
 } from '../../../../types/request';
@@ -12,7 +11,7 @@ import UserTotpSecret from '../../../../models/user-totp-secret';
 import { APIError, ErrCode } from 'encore.dev/api';
 import { authenticator } from 'otplib';
 import jwtService from '../../auth/services/jwt-service';
-import { catchError, generateUAId } from '../../../../utils/helper';
+import { catchError, generateUAId, getAuth } from '../../../../utils/helper';
 import qrcode from 'qrcode';
 import { InMemoryModel } from '../../../../models/in-memory/in-mem-model';
 import { TwoFAMethod } from '../../../../utils/enums';
@@ -215,12 +214,13 @@ const authAppController = {
       throw err;
     }
   },
-  async deleteAuthAppSecret({ refreshToken }: RefreshTokenReq) {
+  async deleteAuthAppSecret() {
     try {
       const callMeta = currentRequest() as APICallMeta;
       const model = callMeta.middlewareData?.mainModel as MainModel;
       const userId = callMeta.middlewareData?.userId as string;
-      const token = await model.token.findByPk(refreshToken.value, {
+      const authData = getAuth();
+      const token = await model.token.findByPk(authData.refreshToken, {
         attributes: ['clientId']
       });
       const clientId = token?.clientId;

@@ -1,9 +1,10 @@
 import { UAParser } from 'ua-parser-js';
 import initMainModel from '../models/main-model';
-import { UserAgent } from '../types';
+import { AuthData, UserAgent } from '../types';
 import { Channel } from 'amqplib';
 import { IncomingMessage } from 'http';
 import { APIError, ErrCode, RawRequest } from 'encore.dev/api';
+import { getAuthData } from 'encore.dev/internal/codegen/auth';
 
 export async function getAllUserImgsAndUsernames() {
   const model = await initMainModel;
@@ -69,6 +70,13 @@ export function getUserAgentData(clientId: string) {
   }
 
   return JSON.parse(value) as UserAgent;
+}
+
+export function getAuth() {
+  const authData = getAuthData<AuthData>();
+  if (!authData) throw APIError.unauthenticated('User is not authenticated!');
+
+  return authData;
 }
 
 export function generateOtp() {

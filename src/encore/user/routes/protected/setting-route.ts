@@ -5,7 +5,7 @@ export const patchSetting = api(
   {
     method: 'PATCH',
     path: '/auth-service/v1/user/setting',
-    auth: false, // will change to true later
+    auth: true,
     expose: true,
     tags: ['verify-refresh-token', 'verify-access-token', 'main-model']
   },

@@ -9,19 +9,17 @@ import {
   catchError,
   closeChannel,
   errCodeToHttpStatus,
-  generateUAId,
   generateRandomChars
 } from '../../../../utils/helper';
 import jwtService from '../../auth/services/jwt-service';
 
 const oauthController = {
-  async google(req: IncomingMessage, res: ServerResponse): Promise<void> {
+  async google(_: IncomingMessage, res: ServerResponse): Promise<void> {
     const callMeta = currentRequest() as APICallMeta;
     const rpcConChan = callMeta.middlewareData?.rpcConChan as Channel;
     const rpcPubChan = callMeta.middlewareData?.rpcPubChan as Channel;
     const model = callMeta.middlewareData?.mainModel as MainModel;
     const code = callMeta.middlewareData?.oauthCode as string;
-
     try {
       const { queue } = await rpcConChan.assertQueue('', {
         exclusive: true,
@@ -70,46 +68,34 @@ const oauthController = {
             user.id
           );
 
-          const { uAId: clientId } = generateUAId(req.headers['user-agent']);
-          if (clientId) {
-            await model.token.create({
-              token: newRefreshToken,
-              userId: `${user.id}`,
-              loginWith: OauthProvider.Google,
-              clientId
-            });
+          const clientId = crypto.randomUUID();
+          await model.token.create({
+            refresh: newRefreshToken,
+            access: accessToken,
+            userId: `${user.id}`,
+            loginWith: OauthProvider.Google,
+            clientId
+          });
 
-            res.statusCode = 200;
-            res.setHeader('Content-Type', 'application/json');
-            res.end(
-              JSON.stringify({
-                status: 'Success',
-                data: {
-                  username: user.username,
-                  name: user.name,
-                  email: user.email,
-                  desc: user.description,
-                  role: user.roleId === 2 ? 'Author' : 'Admin',
-                  img: user.picture,
-                  access: accessToken,
-                  refresh: newRefreshToken
-                }
-              })
-            );
-            rpcConChan.ack(msg);
-            await closeChannel(timeout, rpcConChan);
-          } else {
-            res.statusCode = 400;
-            res.setHeader('Content-Type', 'application/json');
-            res.end(
-              JSON.stringify({
-                status: ErrCode.InvalidArgument,
-                error: 'User agent is invalid!'
-              })
-            );
-            rpcConChan.nack(msg);
-            await closeChannel(timeout, rpcConChan);
-          }
+          res.statusCode = 200;
+          res.setHeader('Content-Type', 'application/json');
+          res.end(
+            JSON.stringify({
+              status: 'Success',
+              data: {
+                username: user.username,
+                name: user.name,
+                email: user.email,
+                desc: user.description,
+                role: user.roleId === 2 ? 'Author' : 'Admin',
+                img: user.picture,
+                access: accessToken,
+                refresh: newRefreshToken
+              }
+            })
+          );
+          rpcConChan.ack(msg);
+          await closeChannel(timeout, rpcConChan);
         } else {
           res.statusCode = 500;
           res.end(
@@ -137,7 +123,7 @@ const oauthController = {
       throw err;
     }
   },
-  async github(req: IncomingMessage, res: ServerResponse): Promise<void> {
+  async github(_: IncomingMessage, res: ServerResponse): Promise<void> {
     const callMeta = currentRequest() as APICallMeta;
     const rpcConChan = callMeta.middlewareData?.rpcConChan as Channel;
     const rpcPubChan = callMeta.middlewareData?.rpcPubChan as Channel;
@@ -193,31 +179,31 @@ const oauthController = {
             user.roleId,
             user.id
           );
-          const { uAId } = generateUAId(req.headers['user-agent']);
-          if (uAId) {
-            await model.token.create({
-              token: newRefreshToken,
-              userId: `${user.id}`,
-              loginWith: OauthProvider.Github,
-              clientId: uAId
-            });
 
-            res.statusCode = 200;
-            res.setHeader('Content-Type', 'application/json');
-            res.end({
-              status: 'Success',
-              data: {
-                username: user.username,
-                name: user.name,
-                email: user.email,
-                desc: user.description,
-                role: user.roleId === 2 ? 'Author' : 'Admin',
-                img: user.picture,
-                access: accessToken,
-                refresh: newRefreshToken
-              }
-            });
-          }
+          const clientId = crypto.randomUUID();
+          await model.token.create({
+            refresh: newRefreshToken,
+            access: accessToken,
+            userId: `${user.id}`,
+            loginWith: OauthProvider.Github,
+            clientId
+          });
+
+          res.statusCode = 200;
+          res.setHeader('Content-Type', 'application/json');
+          res.end({
+            status: 'Success',
+            data: {
+              username: user.username,
+              name: user.name,
+              email: user.email,
+              desc: user.description,
+              role: user.roleId === 2 ? 'Author' : 'Admin',
+              img: user.picture,
+              access: accessToken,
+              refresh: newRefreshToken
+            }
+          });
         } else {
           res.statusCode = 500;
           res.setHeader('Content-Type', 'application/json');
