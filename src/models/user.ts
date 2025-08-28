@@ -11,7 +11,7 @@ interface UserModel {
   description?: string;
   picture?: string;
   banner?: string;
-  roleId?: number;
+  roleId: number;
   verified?: boolean;
   createdAt?: string;
   updatedAt?: string;
