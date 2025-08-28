@@ -13,7 +13,7 @@ import UserTotpSecret from './user-totp-secret';
 import SavedAccount from './saved-account';
 import UserFormRequest from './user-form-request';
 
-export type MainModel = {
+export type Models = {
   token: ReturnType<typeof Token>;
   savedAccount: ReturnType<typeof SavedAccount>;
   user: ReturnType<typeof User>;
@@ -24,6 +24,9 @@ export type MainModel = {
   userTotpSecret: ReturnType<typeof UserTotpSecret>;
   userSetting: ReturnType<typeof UserSetting>;
   userFormRequest: ReturnType<typeof UserFormRequest>;
+};
+
+export type MainModel = Models & {
   dataTypes: typeof DataTypes;
   sequelize: Sequelize;
 };
