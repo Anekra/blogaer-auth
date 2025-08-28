@@ -4,7 +4,7 @@ import type { MainModel } from './main-model';
 import User from './user';
 
 interface SavedAccountModel {
-  clientId: string;
+  id: string;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -27,7 +27,7 @@ const SavedAccount = (
   const savedAccount = sequelize.define<SavedAccount>(
     'SavedAccount',
     {
-      clientId: {
+      id: {
         allowNull: false,
         primaryKey: true,
         unique: true,
