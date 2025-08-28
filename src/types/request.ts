@@ -34,6 +34,8 @@ export interface LoginReq extends EmailOrUsernameReq, UAReq {
   password: string;
 }
 
+export interface RefreshTokenReq extends XAuthReq, UAReq {}
+
 export interface DeleteSavedAccountReq extends UsernameReq, UAReq {}
 
 export interface AuthAppLoginReq extends UAReq, EmailOrUsernameReq {
