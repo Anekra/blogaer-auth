@@ -1,9 +1,7 @@
 'use strict';
 import { Op } from 'sequelize';
-import type { MainModel } from './main-model';
+import type { MainModel, Models } from './main-model';
 import { DataTypes, Sequelize, Model } from 'sequelize';
-import { getMainModel } from '../utils/helper';
-import User from './user';
 
 interface TokenModel {
   refresh: string;
@@ -73,54 +71,16 @@ const Token = (sequelize: Sequelize, dataTypes: typeof DataTypes) => {
       hooks: {
         async afterCreate(attributes, _) {
           console.log(
-            `(userId: ${attributes.userId} | clientId: ${attributes.clientId}) has Logged in.`
+            `AFTER CREATE token >> userId: ${attributes.userId} has Logged in.`
           );
 
-          const model = await getMainModel();
-          if (!model) {
-            console.log('Database connection failed!');
-            return;
-          }
-
-          const user = (await model.user.findByPk(attributes.userId, {
-            include: { model: model.userSetting, attributes: ['twoFaMethod'] }
-          })) as User & {
-            UserSetting?: { twoFaMethod: string };
-          };
-          if (user.UserSetting?.twoFaMethod) {
-            const [savedAccount, isCreated] =
-              await model.savedAccount.findOrCreate({
-                where: { clientId: attributes.clientId },
-                defaults: { clientId: attributes.clientId },
-                include: {
-                  model: model.user,
-                  attributes: ['id']
-                }
-              });
-            if (isCreated) {
-              await savedAccount.addUser(user, {
-                through: {
-                  savedAccountClientId: attributes.clientId,
-                  userId: attributes.userId
-                }
-              });
-              console.log(
-                `(userId: ${attributes.userId} | clientId: ${attributes.clientId}) Account has been saved.`
-              );
-            }
-          } else {
-            await model.userSetting.findOrCreate({
-              where: { userId: attributes.userId },
-              defaults: { userId: attributes.userId }
-            });
-          }
-
-          if ((await model.token.count()) > 1) {
-            const { count } = await model.token.findAndCountAll({
+          const { token } = attributes.sequelize.models as Models;
+          if ((await token.count()) > 1) {
+            const { count } = await token.findAndCountAll({
               where: { clientId: attributes.clientId }
             });
             if (count > 1) {
-              await model.token.destroy({
+              await token.destroy({
                 where: {
                   clientId: attributes.clientId,
                   refresh: { [Op.ne]: attributes.refresh }
