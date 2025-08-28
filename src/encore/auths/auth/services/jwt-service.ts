@@ -1,7 +1,25 @@
 import jwt from 'jsonwebtoken';
+import { generateUAId } from '../../../../utils/helper';
+import mainModel from '../../../../models/main-model';
+import User from '../../../../models/user';
 
 const jwtService = {
-  async generateJwt(username: string, roleId?: number, id?: string) {
+  async generateJwt(
+    id: string,
+    username: string,
+    roleId: number,
+    userAgent?: string
+  ) {
+    const refreshToken = jwt.sign(
+      {
+        UserInfo: {
+          id,
+          username
+        }
+      },
+      `${process.env.REFRESH_TOKEN_SECRET}`,
+      { expiresIn: '1d' }
+    );
     const accessToken = jwt.sign(
       {
         UserInfo: {
@@ -13,18 +31,49 @@ const jwtService = {
       `${process.env.ACCESS_TOKEN_SECRET}`,
       { expiresIn: '15m' }
     );
-    const newRefreshToken = jwt.sign(
-      {
-        UserInfo: {
-          id,
-          username
-        }
-      },
-      `${process.env.REFRESH_TOKEN_SECRET}`,
-      { expiresIn: '1d' }
-    );
 
-    return [accessToken, newRefreshToken];
+    const model = await mainModel;
+    const user = (await model.user.findByPk(id, {
+      include: [
+        { model: model.userSetting, attributes: ['twoFaMethod'] },
+        { model: model.savedAccount, attributes: ['id'] }
+      ]
+    })) as User & {
+      UserSetting?: { twoFaMethod: string };
+      SavedAccount?: { id: string };
+    };
+
+    if (!user.UserSetting) {
+      await model.userSetting.findOrCreate({
+        where: { userId: id },
+        defaults: { userId: id }
+      });
+    }
+
+    if (!user.SavedAccount && userAgent) {
+      const { uAId } = generateUAId(userAgent);
+      const [savedAccount, isCreated] = await model.savedAccount.findOrCreate({
+        where: { id: uAId },
+        defaults: { id: uAId },
+        include: {
+          model: model.user,
+          attributes: ['id']
+        }
+      });
+      if (isCreated) {
+        await savedAccount.addUser(user, {
+          through: {
+            savedAccountId: uAId,
+            userId: id
+          }
+        });
+        console.log(
+          `GENERATE JWT jwt-service >> userId: ${id} Account has been saved.`
+        );
+      }
+    }
+
+    return [accessToken, refreshToken];
   }
 };
 

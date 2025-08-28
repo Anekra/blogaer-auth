@@ -266,7 +266,7 @@ const webauthnController = {
           ]
         }
       });
-      if (!user) {
+      if (!user || !user.id) {
         console.warn(
           `WEBAUTHN LOGIN webauthn-controller >> ${emailOrUsername} doesn't exist!`
         );
@@ -279,12 +279,13 @@ const webauthnController = {
 
       if (user.id) {
         const [accessToken, newRefreshToken] = await jwtService.generateJwt(
+          user.id,
           user.username,
           user.roleId,
-          user.id
+          userAgent
         );
 
-        const clientId = crypto.randomUUID()
+        const clientId = crypto.randomUUID();
         await model.token.create({
           refresh: newRefreshToken,
           access: accessToken,

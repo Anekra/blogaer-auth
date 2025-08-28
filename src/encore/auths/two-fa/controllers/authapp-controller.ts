@@ -33,12 +33,14 @@ const authAppController = {
           model: model.userTotpSecret,
           attributes: ['secret']
         }
-      })) as User & { UserTotpSecret: UserTotpSecret };
+      })) as (User & { UserTotpSecret: UserTotpSecret }) | null;
 
-      if (!user.id) {
-        console.warn('AUTH APP LOGIN authapp-controller >> User do not exist!');
+      if (!user || !user.id) {
+        console.warn(
+          'AUTH APP LOGIN authapp-controller >> User does not exist!'
+        );
 
-        throw new APIError(ErrCode.NotFound, 'User do not exist!');
+        throw new APIError(ErrCode.NotFound, 'User does not exist!');
       }
 
       const isValid = authenticator.check(token, user.UserTotpSecret.secret);
@@ -49,23 +51,20 @@ const authAppController = {
 
         throw new APIError(ErrCode.InvalidArgument, 'Token does not match!');
       }
-      const [accessToken, newRefreshToken] = await jwtService.generateJwt(
+
+      const [accessToken, refreshToken] = await jwtService.generateJwt(
+        user.id,
         user.username,
         user.roleId,
-        user.id
+        userAgent
       );
-
-      const { uAId } = generateUAId(userAgent);
-      if (!uAId) {
-        console.warn(
-          'AUTH APP LOGIN authapp-controller >> User agent is empty!'
-        );
-
-        throw new APIError(
-          ErrCode.InvalidArgument,
-          'No user-agent data provided!'
-        );
-      }
+      const clientId = crypto.randomUUID();
+      await model.token.create({
+        refresh: refreshToken,
+        access: accessToken,
+        userId: user.id,
+        clientId
+      });
 
       return {
         status: 'Success',
@@ -76,8 +75,8 @@ const authAppController = {
           desc: user.description,
           role: user.roleId === 1 ? 'Admin' : 'Author',
           img: user.picture,
-          access: accessToken,
-          refresh: newRefreshToken
+          refreshAt: new Date(Date.now() + 15 * 60 * 1000).getTime(),
+          clientId
         }
       };
     } catch (error) {
