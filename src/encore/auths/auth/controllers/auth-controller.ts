@@ -1,14 +1,16 @@
 import { APIError, ErrCode } from 'encore.dev/api';
 import bcryptjs from 'bcryptjs';
-import jwt, { JwtPayload, VerifyErrors } from 'jsonwebtoken';
-import { AccessDecoded, DefaultRes, RefreshDecoded } from '../../../../types';
+import jwt from 'jsonwebtoken';
+import { DefaultRes, RefreshDecoded } from '../../../../types';
 import { MainModel } from '../../../../models/main-model';
-import {
-  catchError,
-  generateUAId as generateUAId
-} from '../../../../utils/helper';
+import { catchError } from '../../../../utils/helper';
 import { APICallMeta, currentRequest } from 'encore.dev';
-import { LoginReq, RegisterReq, XAuthReq } from '../../../../types/request';
+import {
+  LoginReq,
+  RefreshTokenReq,
+  RegisterReq,
+  XAuthReq
+} from '../../../../types/request';
 import { col, fn, Op, where } from 'sequelize';
 import jwtService from '../services/jwt-service';
 import User from '../../../../models/user';
@@ -34,7 +36,8 @@ const authController = {
       const user = await model.user.create({
         username,
         email,
-        password: hashPassword
+        password: hashPassword,
+        roleId: 2
       });
 
       if (!user || !user.id) {
@@ -42,42 +45,19 @@ const authController = {
         throw new APIError(ErrCode.Internal, 'User registration failed!');
       }
 
-      const accessToken = jwt.sign(
-        {
-          UserInfo: {
-            id: user.id,
-            username: user.username,
-            role: user.roleId === 2 ? 'Author' : 'Admin'
-          }
-        },
-        `${process.env.BASE_URL}`,
-        { expiresIn: '30m' }
+      const [accessToken, refreshToken] = await jwtService.generateJwt(
+        user.id,
+        user.username,
+        user.roleId,
+        userAgent
       );
 
-      const refreshToken = jwt.sign(
-        {
-          UserInfo: {
-            id: user.id,
-            username: user.username
-          }
-        },
-        'session_token',
-        { expiresIn: '1d' }
-      );
-
-      const { uAId } = generateUAId(userAgent);
-      if (!uAId) {
-        console.warn('REGISTER auth-controller >> User agent is empty!');
-        throw new APIError(
-          ErrCode.InvalidArgument,
-          'No user-agent data provided!'
-        );
-      }
+      const clientId = crypto.randomUUID();
       await model.token.create({
         refresh: refreshToken,
         access: accessToken,
         userId: user.id,
-        clientId: uAId
+        clientId
       });
 
       return {
@@ -87,8 +67,8 @@ const authController = {
           username: user.username,
           email: user.email,
           role: user.roleId === 2 ? 'Author' : 'Admin',
-          token: accessToken,
-          refresh: refreshToken
+          refreshAt: new Date(Date.now() + 15 * 60 * 1000).getTime(),
+          clientId
         }
       };
     } catch (error) {
@@ -128,21 +108,18 @@ const authController = {
     try {
       if (!user.id) return APIError.notFound('User not found!');
 
-      const [accessToken, newRefreshToken] = await jwtService.generateJwt(
+      const [accessToken, refreshToken] = await jwtService.generateJwt(
+        user.id,
         user.username,
         user.roleId,
-        user.id
+        userAgent
       );
-      const { uAId } = generateUAId(userAgent);
-      if (!uAId) {
-        console.warn('LOGIN auth-controller >> User agent is empty!');
-        throw new APIError(ErrCode.InvalidArgument, 'User agent is empty!');
-      }
+      const clientId = crypto.randomUUID();
       await model.token.create({
-        refresh: newRefreshToken,
+        refresh: refreshToken,
         access: accessToken,
         userId: user.id,
-        clientId: uAId
+        clientId
       });
 
       return {
@@ -155,7 +132,7 @@ const authController = {
           role: user.roleId === 1 ? 'Admin' : 'Author',
           img: user.picture,
           access: accessToken,
-          refresh: newRefreshToken
+          refresh: refreshToken
         }
       };
     } catch (error) {
@@ -163,7 +140,7 @@ const authController = {
       throw err;
     }
   },
-  async refreshToken({ xAuth }: XAuthReq) {
+  async refreshToken({ xAuth, userAgent }: RefreshTokenReq) {
     if (!xAuth.startsWith('Bearer')) return null;
     const callMeta = currentRequest() as APICallMeta;
     const model = callMeta.middlewareData?.mainModel as MainModel;
@@ -185,20 +162,22 @@ const authController = {
         include: [
           {
             model: model.user,
-            attributes: ['username', 'roleId']
+            attributes: ['id', 'username', 'roleId']
           }
         ]
       })) as Token & { User: User };
+      const foundUserId = foundToken.User.id;
+      if (!foundUserId) return APIError.notFound('User not found!');
 
       const decodedToken = jwt.verify(
         refreshToken,
         `${process.env.REFRESH_TOKEN_SECRET}`
       ) as (string | jwt.JwtPayload) & RefreshDecoded;
-      const decodedUsernames = decodedToken.UserInfo.username;
+      decodedUsername = decodedToken.UserInfo.username;
 
       // Refresh token reuse detection!
       if (!foundToken) {
-        if (decodedUsernames) {
+        if (decodedUsername) {
           const hackedUser = await model.user.findOne({
             where: {
               username: decodedToken.UserInfo.username
@@ -241,9 +220,10 @@ const authController = {
 
         // Refresh token is still valid
         const [accessToken, newRefreshToken] = await jwtService.generateJwt(
+          foundUserId,
           foundUsername,
           foundToken.User.roleId,
-          foundToken.User.id
+          userAgent
         );
         await model.token.update(
           { refresh: newRefreshToken, access: accessToken },
