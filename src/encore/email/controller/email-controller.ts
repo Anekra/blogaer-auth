@@ -19,9 +19,9 @@ const emailController = {
   async sendAddPasswordLink({ origin }: SendEmailLinkReq) {
     try {
       const callMeta = currentRequest() as APICallMeta;
-      const userId = callMeta.middlewareData?.userId as string;
       const model = callMeta.middlewareData?.mainModel as MainModel;
       const authData = getAuth();
+      const userId = authData.userID;
       const { email, limit, html } = await emailService.handleEmailSubject(
         EmailSubject.AddPassword,
         userId,
@@ -48,9 +48,9 @@ const emailController = {
   async sendResetPasswordLink({ origin }: SendEmailLinkReq) {
     try {
       const callMeta = currentRequest() as APICallMeta;
-      const userId = callMeta.middlewareData?.userId as string;
       const model = callMeta.middlewareData?.mainModel as MainModel;
       const authData = getAuth();
+      const userId = authData.userID;
       const { email, limit, html } = await emailService.handleEmailSubject(
         EmailSubject.ResetPassword,
         userId,
@@ -77,9 +77,9 @@ const emailController = {
   async sendUpdateEmailLink({ origin }: SendEmailLinkReq) {
     try {
       const callMeta = currentRequest() as APICallMeta;
-      const userId = callMeta.middlewareData?.userId as string;
       const model = callMeta.middlewareData?.mainModel as MainModel;
       const authData = getAuth();
+      const userId = authData.userID;
       const { email, limit, html } = await emailService.handleEmailSubject(
         EmailSubject.UpdateEmail,
         userId,
@@ -106,9 +106,9 @@ const emailController = {
   async sendUpdateUsernameLink({ origin }: SendEmailLinkReq) {
     try {
       const callMeta = currentRequest() as APICallMeta;
-      const userId = callMeta.middlewareData?.userId as string;
       const model = callMeta.middlewareData?.mainModel as MainModel;
       const authData = getAuth();
+      const userId = authData.userID;
       const { email, limit, html } = await emailService.handleEmailSubject(
         EmailSubject.UpdateUsername,
         userId,
@@ -135,8 +135,9 @@ const emailController = {
   async sendUpdateEmailOtp({ email, request, limit }: SendUpdateEmailOtpReq) {
     try {
       const callMeta = currentRequest() as APICallMeta;
-      const userId = callMeta.middlewareData?.userId as string;
       const model = callMeta.middlewareData?.mainModel as MainModel;
+      const authData = getAuth();
+      const userId = authData.userID;
       const user = await model.user.findByPk(userId, {
         attributes: ['id']
       });
@@ -182,8 +183,9 @@ const emailController = {
   }: GetUpdateEmailOtpTime) {
     try {
       const callMeta = currentRequest() as APICallMeta;
-      const userId = callMeta.middlewareData?.userId as string;
       const model = callMeta.middlewareData?.mainModel as MainModel;
+      const authData = getAuth();
+      const userId = authData.userID;
       const { uAId } = generateUAId(userAgent);
       if (!uAId) {
         console.warn(

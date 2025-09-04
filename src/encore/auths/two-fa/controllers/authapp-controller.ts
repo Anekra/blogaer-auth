@@ -88,8 +88,9 @@ const authAppController = {
     const callMeta = currentRequest() as APICallMeta;
     const model = callMeta.middlewareData?.mainModel as MainModel;
     const inMemModel = callMeta.middlewareData?.inMemModel as InMemoryModel;
-    const userId = callMeta.middlewareData?.userId as string;
     try {
+      const authData = getAuth();
+      const userId = authData.userID;
       const user = await model.user.findByPk(userId, { attributes: ['email'] });
       if (!user?.email) {
         console.warn(
@@ -134,8 +135,9 @@ const authAppController = {
     const callMeta = currentRequest() as APICallMeta;
     const model = callMeta.middlewareData?.mainModel as MainModel;
     const inMemModel = callMeta.middlewareData?.inMemModel as InMemoryModel;
-    const userId = callMeta.middlewareData?.userId as string;
     try {
+      const authData = getAuth();
+      const userId = authData.userID;
       const userSecret = await inMemModel.totpSecret.findByPk(secretId, {
         attributes: ['secret']
       });
@@ -217,8 +219,8 @@ const authAppController = {
     try {
       const callMeta = currentRequest() as APICallMeta;
       const model = callMeta.middlewareData?.mainModel as MainModel;
-      const userId = callMeta.middlewareData?.userId as string;
       const authData = getAuth();
+      const userId = authData.userID;
       const token = await model.token.findByPk(authData.refreshToken, {
         attributes: ['clientId']
       });

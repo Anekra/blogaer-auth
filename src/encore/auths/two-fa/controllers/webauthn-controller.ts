@@ -325,8 +325,9 @@ const webauthnController = {
     const callMeta = currentRequest() as APICallMeta;
     const model = callMeta.middlewareData?.mainModel as MainModel;
     const inMemModel = callMeta.middlewareData?.inMemModel as InMemoryModel;
-    const userId = callMeta.middlewareData?.userId as string;
     try {
+      const authData = getAuth();
+      const userId = authData.userID;
       const user = await model.user.findByPk(userId, {
         attributes: ['name']
       });
@@ -381,8 +382,9 @@ const webauthnController = {
     const callMeta = currentRequest() as APICallMeta;
     const model = callMeta.middlewareData?.mainModel as MainModel;
     const inMemModel = callMeta.middlewareData?.inMemModel as InMemoryModel;
-    const userId = callMeta.middlewareData?.userId as string;
     try {
+      const authData = getAuth();
+      const userId = authData.userID;
       const inMemOption = await inMemModel.webAuthnRegisterOption.findOne({
         where: { userId }
       });
@@ -493,8 +495,8 @@ const webauthnController = {
     try {
       const callMeta = currentRequest() as APICallMeta;
       const model = callMeta.middlewareData?.mainModel as MainModel;
-      const userId = callMeta.middlewareData?.userId as string;
       const authData = getAuth();
+      const userId = authData.userID;
       const token = await model.token.findByPk(authData.refreshToken, {
         attributes: ['clientId']
       });

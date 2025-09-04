@@ -25,8 +25,8 @@ const userController = {
     try {
       const callMeta = currentRequest() as APICallMeta;
       const model = callMeta.middlewareData?.mainModel as MainModel;
-      const userId = callMeta.middlewareData?.userId as string;
       const authData = getAuth();
+      const userId = authData.userID;
       const token = await model.token.findByPk(authData.refreshToken, {
         attributes: ['clientId']
       });
@@ -71,8 +71,9 @@ const userController = {
     const userFormRequest = callMeta.middlewareData
       ?.userFormRequest as UserFormRequest;
     const model = callMeta.middlewareData?.mainModel as MainModel;
-    const userId = callMeta.middlewareData?.userId as string;
     try {
+      const authData = getAuth();
+      const userId = authData.userID;
       if (email) {
         if (userFormRequest) {
           const emailExist = await model.user.findOne({
@@ -138,9 +139,9 @@ const userController = {
   async getSecurity() {
     try {
       const callMeta = currentRequest() as APICallMeta;
-      const userId = callMeta.middlewareData?.userId as string;
       const model = callMeta.middlewareData?.mainModel as MainModel;
       const authData = getAuth();
+      const userId = authData.userID;
       const token = await model.token.findByPk(authData.refreshToken, {
         attributes: ['clientId']
       });
@@ -219,8 +220,9 @@ const userController = {
   }: AddOrResetPasswordReq) {
     try {
       const callMeta = currentRequest() as APICallMeta;
-      const userId = callMeta.middlewareData?.userId as string;
       const model = callMeta.middlewareData?.mainModel as MainModel;
+      const authData = getAuth();
+      const userId = authData.userID;
       const hashPassword = await bcryptjs.hash(password, 10);
       const [updatedData] = await model.user.update(
         { password: hashPassword },
@@ -254,9 +256,10 @@ const userController = {
   },
   async getSocial() {
     const callMeta = currentRequest() as APICallMeta;
-    const userId = callMeta.middlewareData?.userId as string;
     const model = callMeta.middlewareData?.mainModel as MainModel;
     try {
+      const authData = getAuth();
+      const userId = authData.userID;
       const socials = (await model.userSocial.findAll({
         where: { userId },
         attributes: ['social', 'link']
@@ -274,9 +277,10 @@ const userController = {
   },
   async patchSocial({ social, link }: PatchSocialReq) {
     const callMeta = currentRequest() as APICallMeta;
-    const userId = callMeta.middlewareData?.userId as string;
     const model = callMeta.middlewareData?.mainModel as MainModel;
     try {
+      const authData = getAuth();
+      const userId = authData.userID;
       const [userSocial, isCreated] = await model.userSocial.findOrCreate({
         where: {
           userId,
@@ -316,8 +320,9 @@ const userController = {
   }: PatchSettingReq) {
     try {
       const callMeta = currentRequest() as APICallMeta;
-      const userId = callMeta.middlewareData?.userId as string;
       const model = callMeta.middlewareData?.mainModel as MainModel;
+      const authData = getAuth();
+      const userId = authData.userID;
       await model.userSetting.update(
         { twoFaEnabled, twoFaMethod, preference },
         { where: { userId } }

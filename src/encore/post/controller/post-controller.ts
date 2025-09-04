@@ -8,6 +8,7 @@ import {
   closeChannel,
   errCodeToHttpStatus,
   getAllUserImgsAndUsernames,
+  getAuth,
   getLastPath,
   getUserById,
   parseJsonBody
@@ -204,10 +205,11 @@ const postController = {
   },
   async getPostsByUserId(req: IncomingMessage, res: ServerResponse) {
     const callMeta = currentRequest() as APICallMeta;
-    const userId = callMeta.middlewareData?.userId as string;
     const rpcConChan = callMeta.middlewareData?.rpcConChan as Channel;
     const rpcPubChan = callMeta.middlewareData?.rpcPubChan as Channel;
     try {
+      const authData = getAuth();
+      const userId = authData.userID;
       const protocol =
         req.headers['x-forwarded-proto'] === 'https' ? 'https' : 'http';
       const host = req.headers.host ?? 'localhost';
@@ -294,10 +296,11 @@ const postController = {
   },
   async addPost(req: IncomingMessage, res: ServerResponse) {
     const callMeta = currentRequest() as APICallMeta;
-    const userId = callMeta.middlewareData?.userId as string;
     const rpcConChan = callMeta.middlewareData?.rpcConChan as Channel;
     const rpcPubChan = callMeta.middlewareData?.rpcPubChan as Channel;
     try {
+      const authData = getAuth();
+      const userId = authData.userID;
       const { title, text, content, tags } = await parseJsonBody<AddPostReq>(
         req
       );

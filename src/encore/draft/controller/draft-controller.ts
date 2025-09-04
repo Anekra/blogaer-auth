@@ -3,6 +3,7 @@ import {
   catchError,
   closeChannel,
   errCodeToHttpStatus,
+  getAuth,
   getLastPath,
   getUserById,
   parseJsonBody
@@ -25,15 +26,16 @@ const draftController = {
     console.log('GET DRAFTS BY USER ID');
     const url = new URL(`${req.headers.origin}${req.url}`);
     const params = url.searchParams;
-    const number = params.get('number') ?? 1;
+    const page = params.get('page') ?? 1;
     const size = params.get('size') ?? 10;
     // const query = params.get('query');
     const callMeta = currentRequest() as APICallMeta;
-    const userId = callMeta.middlewareData?.userId as string;
+    const authData = getAuth();
+    const userId = authData.userID;
     const rpcConChan = callMeta.middlewareData?.rpcConChan as Channel;
     const rpcPubChan = callMeta.middlewareData?.rpcPubChan as Channel;
     try {
-      const message = Buffer.from(JSON.stringify({ number, size, userId }));
+      const message = Buffer.from(JSON.stringify({ page, size, userId }));
       const { queue } = await rpcConChan.assertQueue('', {
         exclusive: true,
         durable: false
@@ -200,7 +202,10 @@ const draftController = {
         { noAck: true }
       );
     } catch (error) {
-      const [err, errMsg] = catchError('GET DRAFT BY ID draft-controller', error);
+      const [err, errMsg] = catchError(
+        'GET DRAFT BY ID draft-controller',
+        error
+      );
 
       res.statusCode =
         err instanceof APIError ? errCodeToHttpStatus(err.code) : 500;
@@ -217,10 +222,11 @@ const draftController = {
   },
   async addDraft(req: IncomingMessage, res: ServerResponse) {
     const callMeta = currentRequest() as APICallMeta;
-    const userId = callMeta.middlewareData?.userId as string;
     const rpcConChan = callMeta.middlewareData?.rpcConChan as Channel;
     const rpcPubChan = callMeta.middlewareData?.rpcPubChan as Channel;
     try {
+      const authData = getAuth();
+      const userId = authData.userID;
       const { title, text, content } = await parseJsonBody<AddDraftReq>(req);
       const message = Buffer.from(
         JSON.stringify({ userId, title: title.trim(), text, content })
