@@ -15,6 +15,8 @@ import { col, fn, Op, where } from 'sequelize';
 import jwtService from '../services/jwt-service';
 import User from '../../../../models/user';
 import Token from '../../../../models/token';
+import emailService from '../../../email/service/email-service';
+import { CommonStatus, EmailSubject } from '../../../../utils/enums';
 
 const authController = {
   async register({
@@ -58,6 +60,23 @@ const authController = {
         access: accessToken,
         userId: user.id,
         clientId
+      });
+
+      // send verification email
+      const token = crypto.randomUUID();
+      const html = await emailService.handleEmailVerification(
+        user.username,
+        token
+      );
+      await emailService.sendEmail(user.email, EmailSubject.VerifyEmail, html);
+      const now = Date.now();
+      const limit = new Date(now + 24 * 60 * 60 * 1000);
+      await model.userFormRequest.create({
+        userId: user.id,
+        clientId,
+        request: EmailSubject.VerifyEmail,
+        limit,
+        status: CommonStatus.Pending
       });
 
       return {

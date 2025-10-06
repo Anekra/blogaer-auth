@@ -22,7 +22,7 @@ const emailController = {
       const model = callMeta.middlewareData?.mainModel as MainModel;
       const authData = getAuth();
       const userId = authData.userID;
-      const { email, limit, html } = await emailService.handleEmailSubject(
+      const { email, limit, html } = await emailService.handleEmailReqForm(
         EmailSubject.AddPassword,
         userId,
         authData.refreshToken,
@@ -51,7 +51,7 @@ const emailController = {
       const model = callMeta.middlewareData?.mainModel as MainModel;
       const authData = getAuth();
       const userId = authData.userID;
-      const { email, limit, html } = await emailService.handleEmailSubject(
+      const { email, limit, html } = await emailService.handleEmailReqForm(
         EmailSubject.ResetPassword,
         userId,
         authData.refreshToken,
@@ -80,7 +80,7 @@ const emailController = {
       const model = callMeta.middlewareData?.mainModel as MainModel;
       const authData = getAuth();
       const userId = authData.userID;
-      const { email, limit, html } = await emailService.handleEmailSubject(
+      const { email, limit, html } = await emailService.handleEmailReqForm(
         EmailSubject.UpdateEmail,
         userId,
         authData.refreshToken,
@@ -109,7 +109,7 @@ const emailController = {
       const model = callMeta.middlewareData?.mainModel as MainModel;
       const authData = getAuth();
       const userId = authData.userID;
-      const { email, limit, html } = await emailService.handleEmailSubject(
+      const { email, limit, html } = await emailService.handleEmailReqForm(
         EmailSubject.UpdateUsername,
         userId,
         authData.refreshToken,

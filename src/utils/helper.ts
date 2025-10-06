@@ -4,7 +4,7 @@ import { AuthData, UserAgent } from '../types';
 import { Channel } from 'amqplib';
 import { IncomingMessage } from 'http';
 import { APIError, ErrCode, RawRequest } from 'encore.dev/api';
-import { getAuthData } from 'encore.dev/internal/codegen/auth';
+import { getAuthData } from '~encore/auth';
 
 export async function getAllUserImgsAndUsernames() {
   const model = await initMainModel;
@@ -73,7 +73,7 @@ export function getUserAgentData(clientId: string) {
 }
 
 export function getAuth() {
-  const authData = getAuthData<AuthData>();
+  const authData = getAuthData();
   if (!authData) throw APIError.unauthenticated('User is not authenticated!');
 
   return authData;

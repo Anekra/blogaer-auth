@@ -1,9 +1,9 @@
 const sequelizeConfig = {
   development: {
-    username: `${process.env.DEV_DB_USER}`,
-    password: `${process.env.DEV_DB_PASSWORD}`,
-    database: `${process.env.DEV_DB_NAME}`,
-    host: `${process.env.DEV_HOST}`,
+    username: `${process.env.DB_USER}`,
+    password: `${process.env.DB_PASS}`,
+    database: `${process.env.DB_NAME}`,
+    host: `${process.env.DB_HOST}`,
     storage: 'blogaer_auth.db',
     dialect: 'sqlite'
   },

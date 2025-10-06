@@ -22,7 +22,7 @@ export interface UsernameReq {
 }
 
 export interface UAReq {
-  userAgent: Header<'User-Agent'>;
+  userAgent: Header<'user-agent'>;
 }
 
 export interface RegisterReq extends UsernameReq, UAReq {
