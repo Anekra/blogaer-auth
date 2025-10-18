@@ -32,6 +32,7 @@ async function attemptConnection(
         ? 'Retrying in 60 seconds!'
         : 'Max retries have been reached! ✘✘✘'
     );
+    console.error(error);
     if (retries >= 5) {
       rabbitMQConnPromise = null;
       console.error(
