@@ -4,7 +4,7 @@ import attemptConnection from '../connection/rabbitmq-connection';
 const channelMap: Map<string, Promise<amqp.Channel | null>> = new Map();
 
 const msgService = {
-  async createChannel(
+  async initChannel(
     channelName: string,
     exchangeName: string,
     exchangeType: string
@@ -25,10 +25,6 @@ const msgService = {
         const connection = await attemptConnection;
         if (!connection) return null;
         channel = await connection.createChannel();
-        await channel.assertExchange(exchangeName, exchangeType, {
-          durable: false,
-          autoDelete: true
-        });
         channel.on('close', () => {
           console.warn(
             `msg-service >> ${channelName} -`,

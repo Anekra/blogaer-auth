@@ -3,21 +3,21 @@ import msgService from '../services/msg-service';
 
 const rabbitmqChannel = {
   async rpcPubChan() {
-    return await msgService.createChannel(
+    return await msgService.initChannel(
       'rpc-publisher-channel',
       ExchangeName.Rpc,
-      ExchangeType.Direct
+      ExchangeType.Direct,
     );
   },
   async rpcConChan() {
-    return await msgService.createChannel(
+    return await msgService.initChannel(
       'rpc-consumer-channel',
       ExchangeName.Rpc,
       ExchangeType.Direct
     );
   },
   async topicPubChan() {
-    return await msgService.createChannel(
+    return await msgService.initChannel(
       'topic-consumer-channel',
       ExchangeName.Topic,
       ExchangeType.Direct
