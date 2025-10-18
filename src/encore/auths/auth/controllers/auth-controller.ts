@@ -62,11 +62,14 @@ const authController = {
         clientId
       });
 
-      // send verification email
       const token = crypto.randomUUID();
-      const html = await emailService.handleEmailVerification(
-        user.username,
-        token
+      const url = new URL('http://localhost:3030/auth/email/verification');
+      url.searchParams.set('username', `${username}`);
+      url.searchParams.set('subject', `${EmailSubject.VerifyEmail}`);
+      url.searchParams.set('token', `${token}`);
+      const html = emailService.createLinkHtml(
+        url.href,
+        EmailSubject.VerifyEmail
       );
       await emailService.sendEmail(user.email, EmailSubject.VerifyEmail, html);
       const now = Date.now();
