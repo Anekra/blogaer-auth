@@ -18,7 +18,7 @@
     "@simplewebauthn/server": "^13.1.1",
     "amqplib": "^0.10.8",
     "bcryptjs": "^3.0.2",
-    "encore.dev": "^1.49.3",
+    "encore.dev": "^1.50.4",
     "jsonwebtoken": "^9.0.2",
     "nanoid": "^5.1.5",
     "nodemailer": "^7.0.4",
