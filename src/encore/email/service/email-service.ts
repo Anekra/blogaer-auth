@@ -97,16 +97,6 @@ const emailService = {
 
     return { email: user.email, limit: timeLimit.getTime(), html };
   },
-  async handleEmailVerification(username: string, token: string) {
-    const url = new URL('http://localhost:3030/auth/email/verification');
-    url.searchParams.set('username', `${username}`);
-    url.searchParams.set('subject', `${EmailSubject.VerifyEmail}`);
-    url.searchParams.set('token', `${token}`);
-
-    const html = this.createLinkHtml(url.href, EmailSubject.VerifyEmail);
-
-    return html;
-  },
   createLinkHtml(link: string, subject: EmailSubject) {
     let html = '';
     switch (subject) {
