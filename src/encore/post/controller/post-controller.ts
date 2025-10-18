@@ -50,11 +50,19 @@ const postController = {
       const timeout = setTimeout(() => {
         console.warn('GET POSTS BY PAGE auth-controller >> Request timeout!');
 
-        throw new APIError(
-          ErrCode.DeadlineExceeded,
+        const err = APIError.deadlineExceeded(
           'Server took too long to respond!'
         );
-      }, 10000);
+        res.statusCode = errCodeToHttpStatus(err.code);
+        res.setHeader('Content-Type', 'application/json');
+        res.end(
+          JSON.stringify({
+            code: err.code,
+            message: err.message
+          })
+        );
+        closeChannel(timeout, rpcConChan);
+      }, 5000);
 
       await rpcConChan.consume(
         queue,
