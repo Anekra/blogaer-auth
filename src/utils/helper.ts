@@ -91,9 +91,12 @@ export function generateOtp() {
 export async function closeChannel(timeout: NodeJS.Timeout, channel: Channel) {
   try {
     clearTimeout(timeout);
-    if (channel) await channel.close();
+    if (channel) {
+      console.warn('CLOSE CHANNEL helper >>', 'Set timeout!');
+      await channel.close();
+    }
   } catch (error) {
-    console.warn('At handleGetPostById >>', 'Channel already closed!');
+    console.warn('CLOSE CHANNEL helper >>', 'Set timeout error!');
   }
 }
 
