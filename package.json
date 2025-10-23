@@ -5,12 +5,25 @@
   "description": "Encore Typescript Starter",
   "license": "MPL-2.0",
   "type": "module",
+  "scripts": {
+    "dev": ". .env && encore run --port 3030",
+    "build": "encore build docker auth-service:latest",
+    "db:drop": "bun x sequelize-cli db:drop",
+    "db:create": "bun x sequelize-cli db:create",
+    "db:migrate": "bun x sequelize-cli db:migrate",
+    "db:migrate:undo": "bun x sequelize-cli db:migrate:undo",
+    "db:migrate:undo:all": "bun x sequelize-cli db:migrate:undo:all",
+    "db:seed:all": "bun x sequelize-cli db:seed:all",
+    "db:seed:role": "bun x sequelize-cli db:seed --seed ./src/sequelize/seeders/default-roles.ts",
+    "db:seed:undo:all": "bun x sequelize-cli db:seed:undo:all"
+  },
   "devDependencies": {
     "@types/amqplib": "^0.10.7",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^20.5.7",
     "@types/nodemailer": "^6.4.17",
     "@types/qrcode": "^1.5.5",
+    "sequelize-cli": "sequelize/cli",
     "typescript": "^5.2.2"
   },
   "dependencies": {
@@ -18,7 +31,7 @@
     "@simplewebauthn/server": "^13.1.1",
     "amqplib": "^0.10.8",
     "bcryptjs": "^3.0.2",
-    "encore.dev": "^1.50.4",
+    "encore.dev": "^1.50.6",
     "jsonwebtoken": "^9.0.2",
     "nanoid": "^5.1.5",
     "nodemailer": "^7.0.4",
