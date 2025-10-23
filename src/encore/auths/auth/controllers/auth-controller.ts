@@ -1,7 +1,7 @@
 import { APIError, ErrCode } from 'encore.dev/api';
 import bcryptjs from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { DefaultRes, RefreshDecoded } from '../../../../types';
+import { RefreshDecoded } from '../../../../types';
 import { MainModel } from '../../../../models/main-model';
 import { catchError } from '../../../../utils/helper';
 import { APICallMeta, currentRequest } from 'encore.dev';
@@ -17,14 +17,10 @@ import User from '../../../../models/user';
 import Token from '../../../../models/token';
 import emailService from '../../../email/service/email-service';
 import { CommonStatus, EmailSubject } from '../../../../utils/enums';
+import { IncomingMessage, ServerResponse } from 'http';
 
 const authController = {
-  async register({
-    userAgent,
-    username,
-    email,
-    password
-  }: RegisterReq): Promise<DefaultRes> {
+  async register({ userAgent, username, email, password }: RegisterReq) {
     if (!password) {
       console.log('REGISTER auth-controller >> Password field is empty!');
       throw new APIError(ErrCode.InvalidArgument, 'Password is empty!');
@@ -62,24 +58,27 @@ const authController = {
         clientId
       });
 
-      const token = crypto.randomUUID();
-      const url = new URL('http://localhost:3030/auth/email/verification');
+      const code = crypto.randomUUID();
+      const url = new URL(
+        `${process.env.BASE_URL}/auth-service/v1/auth/verify-email`
+      );
       url.searchParams.set('username', `${username}`);
       url.searchParams.set('subject', `${EmailSubject.VerifyEmail}`);
-      url.searchParams.set('token', `${token}`);
+      url.searchParams.set('code', `${code}`);
       const html = emailService.createLinkHtml(
         url.href,
         EmailSubject.VerifyEmail
       );
-      await emailService.sendEmail(user.email, EmailSubject.VerifyEmail, html);
+      await emailService.sendEmail(user.email, 'Verify email address', html);
       const now = Date.now();
       const limit = new Date(now + 24 * 60 * 60 * 1000);
-      await model.userFormRequest.create({
+      await model.userRequest.create({
         userId: user.id,
         clientId,
         request: EmailSubject.VerifyEmail,
         limit,
-        status: CommonStatus.Pending
+        status: CommonStatus.Pending,
+        code
       });
 
       return {
@@ -89,7 +88,7 @@ const authController = {
           username: user.username,
           email: user.email,
           role: user.roleId === 2 ? 'Author' : 'Admin',
-          refreshAt: new Date(Date.now() + 15 * 60 * 1000).getTime(),
+          refreshAt: new Date(now + 15 * 60 * 1000).getTime(),
           clientId
         }
       };
@@ -98,11 +97,7 @@ const authController = {
       throw err;
     }
   },
-  async login({
-    userAgent,
-    emailOrUsername,
-    password
-  }: LoginReq): Promise<DefaultRes> {
+  async login({ userAgent, emailOrUsername, password }: LoginReq) {
     const callMeta = currentRequest() as APICallMeta;
     const model = callMeta.middlewareData?.mainModel as MainModel;
     const payload = emailOrUsername.trim();
@@ -160,6 +155,64 @@ const authController = {
     } catch (error) {
       const [err] = catchError('LOGIN auth-controller', error);
       throw err;
+    }
+  },
+  async verifyEmail(req: IncomingMessage, res: ServerResponse) {
+    const url = new URL(`${process.env.BASE_URL}${req.url}`);
+    const params = url.searchParams;
+    const username = params.get('username');
+    const subject = params.get('subject');
+    const code = params.get('code');
+    if (subject !== EmailSubject.VerifyEmail) {
+      console.warn('VERIFY EMAIL auth-controller >> Not a valid subject!');
+      res.writeHead(302, {
+        Location: `${process.env.CLIENT_URL}/auth/verify-status?request=${subject}&verified=false`
+      });
+      res.end();
+    }
+
+    if (username && subject && code) {
+      const callMeta = currentRequest() as APICallMeta;
+      const model = callMeta.middlewareData?.mainModel as MainModel;
+      const user = await model.user.findOne({
+        where: {
+          username
+        }
+      });
+      const request = await model.userRequest.findOne({
+        where: {
+          request: subject,
+          code,
+          limit: {
+            [Op.gt]: new Date()
+          }
+        }
+      });
+
+      if (user && request) {
+        let Location = `${process.env.CLIENT_URL}/auth/verify-status?request=${subject}&verified=true&message=email-already-verified`;
+        if (!user.verified) {
+          user.update({ verified: true });
+          request.update({ status: CommonStatus.Success });
+          Location = `${process.env.CLIENT_URL}/auth/verify-status?request=${subject}&verified=true`;
+        }
+        res.writeHead(302, { Location });
+        res.end();
+      } else {
+        console.warn(
+          'VERIFY EMAIL auth-controller >> Verify email request not found!'
+        );
+        res.writeHead(302, {
+          Location: `${process.env.CLIENT_URL}/auth/verify-status?request=${subject}&verified=false&message=request-not-found`
+        });
+        res.end();
+      }
+    } else {
+      console.warn('VERIFY EMAIL auth-controller >> Invalid request!');
+      res.writeHead(302, {
+        Location: `${process.env.CLIENT_URL}/auth/verify-status?request=${subject}&verified=false&message=invalid-request`
+      });
+      res.end();
     }
   },
   async refreshToken({ xAuth, userAgent }: RefreshTokenReq) {
