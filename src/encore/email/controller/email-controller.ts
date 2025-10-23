@@ -155,7 +155,7 @@ const emailController = {
       const foundRequest = await model.userRequest.findOne({
         where: { userId: user.id, request, limit: date }
       });
-      const updated = await foundRequest?.update({ otp });
+      const updated = await foundRequest?.update({ code: otp });
       if (updated?.updatedAt) {
         const info = await emailService.sendEmail(
           email,
@@ -203,7 +203,7 @@ const emailController = {
         }
       });
 
-      if (foundRequest?.updatedAt && foundRequest?.otp) {
+      if (foundRequest?.updatedAt && foundRequest?.code) {
         const time = new Date(
           foundRequest.updatedAt.getTime() + 5 * 60 * 1000
         ).getTime();
