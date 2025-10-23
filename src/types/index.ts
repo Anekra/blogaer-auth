@@ -1,13 +1,10 @@
 import { APIError, Header } from 'encore.dev/api';
 
-export type DefaultRes =
-  | {
-      status: string;
-      data?: any;
-      message?: string;
-    }
-  | APIError
-  | undefined;
+export interface DefaultRes {
+  status: string;
+  data?: any;
+  message?: string;
+}
 
 export type UserAgent = {
   browser: string;
