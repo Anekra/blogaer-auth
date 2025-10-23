@@ -122,12 +122,12 @@ export function parseCookies(cookieHeader?: string): Record<string, string> {
 }
 
 export function catchError(errLocation: string, error: unknown) {
-  const errMsg = `${errLocation} >> ${
+  const errMsg = `${
     error instanceof Error
       ? error.message
       : "Error wasn't an instance of Error interface"
   }`;
-  console.error(errMsg);
+  console.error(`${errLocation} >> ${errMsg}`);
 
   if (error instanceof APIError) return [error, errMsg];
 
