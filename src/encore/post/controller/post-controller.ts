@@ -2,7 +2,6 @@ import { Channel } from 'amqplib';
 import { APICallMeta, currentRequest } from 'encore.dev';
 import { AddPostReq, PatchPostReq } from '../../../types/request';
 import { ExchangeName } from '../../../utils/enums';
-import { nanoid } from 'nanoid';
 import {
   catchError,
   closeChannel,
@@ -17,6 +16,7 @@ import { IncomingMessage, ServerResponse } from 'http';
 import { APIError, ErrCode } from 'encore.dev/api';
 import { PagedPostDto } from '../../../types/dto/PagedPostDto';
 import { PostDto } from '../../../types/dto/PostDto';
+import { MainModel } from '../../../models/main-model';
 
 const postController = {
   async getPostsByPage(req: IncomingMessage, res: ServerResponse) {
@@ -30,7 +30,7 @@ const postController = {
     const callMeta = currentRequest() as APICallMeta;
     const rpcConChan = callMeta.middlewareData?.rpcConChan as Channel;
     const rpcPubChan = callMeta.middlewareData?.rpcPubChan as Channel;
-    try {
+    try {      
       const message = Buffer.from(JSON.stringify({ number, size }));
       const userList = await getAllUserImgsAndUsernames();
       if (!userList) throw new Error('Database connection failed!');
@@ -41,7 +41,7 @@ const postController = {
         autoDelete: true
       });
 
-      const correlationId = nanoid(9);
+      const correlationId = crypto.randomUUID();
       rpcPubChan.publish(ExchangeName.Rpc, 'post.get.by.page.key', message, {
         persistent: false,
         replyTo: queue,
@@ -62,7 +62,7 @@ const postController = {
           })
         );
         closeChannel(timeout, rpcConChan);
-      }, 5000);
+      }, 10000);
 
       await rpcConChan.consume(
         queue,
@@ -147,7 +147,7 @@ const postController = {
         exclusive: true,
         durable: false
       });
-      const correlationId = nanoid(9);
+      const correlationId = crypto.randomUUID();
       rpcPubChan.publish(ExchangeName.Rpc, 'post.get.by.id.key', message, {
         persistent: false,
         replyTo: queue,
@@ -231,7 +231,7 @@ const postController = {
         durable: false
       });
 
-      const correlationId = nanoid(9);
+      const correlationId = crypto.randomUUID();
       rpcPubChan.publish(ExchangeName.Rpc, 'post.get.by.user.id.key', message, {
         persistent: false,
         replyTo: queue,
@@ -320,7 +320,7 @@ const postController = {
         durable: false
       });
 
-      const correlationId = nanoid(9);
+      const correlationId = crypto.randomUUID();
       rpcPubChan.publish(ExchangeName.Rpc, 'post.add.key', message, {
         persistent: false,
         replyTo: queue,
