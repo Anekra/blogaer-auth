@@ -3,30 +3,28 @@ import { CommonStatus } from '../utils/enums';
 import type { MainModel } from './main-model';
 import { DataTypes, Model, Sequelize } from 'sequelize';
 
-interface UserFormRequestModel {
+interface UserRequestModel {
   id?: number;
   userId: string;
   clientId: string;
   request: string;
   limit: Date;
   status: CommonStatus;
-  otp?: string;
+  code?: string;
   createdAt?: Date;
   updatedAt?: Date;
 }
 
-interface UserFormRequest
-  extends Model<UserFormRequestModel>,
-    UserFormRequestModel {}
+interface UserRequest extends Model<UserRequestModel>, UserRequestModel {}
 
-type UserFormRequestStatic = typeof Model & {
-  new (values?: Record<string, unknown>, options?: any): UserFormRequest;
+type UserRequestStatic = typeof Model & {
+  new (values?: Record<string, unknown>, options?: any): UserRequest;
   associate: (model: MainModel) => void;
 };
 
-const UserFormRequest = (sequelize: Sequelize, dataTypes: typeof DataTypes) => {
-  const userFormRequest = sequelize.define<UserFormRequest>(
-    'UserFormRequest',
+const UserRequest = (sequelize: Sequelize, dataTypes: typeof DataTypes) => {
+  const userRequest = sequelize.define<UserRequest>(
+    'UserRequest',
     {
       id: {
         allowNull: false,
@@ -55,7 +53,7 @@ const UserFormRequest = (sequelize: Sequelize, dataTypes: typeof DataTypes) => {
         allowNull: false,
         type: dataTypes.STRING
       },
-      otp: {
+      code: {
         type: dataTypes.STRING
       },
       createdAt: {
@@ -66,21 +64,21 @@ const UserFormRequest = (sequelize: Sequelize, dataTypes: typeof DataTypes) => {
       }
     },
     {
-      tableName: 'user_form_request',
+      tableName: 'user_requests',
       underscored: true
     }
-  ) as UserFormRequestStatic;
+  ) as UserRequestStatic;
 
-  userFormRequest.associate = (model: MainModel) => {
+  userRequest.associate = (model: MainModel) => {
     if (model.user) {
-      userFormRequest.belongsTo(model.user, {
+      userRequest.belongsTo(model.user, {
         foreignKey: 'user_id',
         targetKey: 'id'
       });
     }
   };
 
-  return userFormRequest;
+  return userRequest;
 };
 
-export default UserFormRequest;
+export default UserRequest;

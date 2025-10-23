@@ -12,7 +12,7 @@ const userService = {
   ) {
     const now = Date.now();
     const twentyFourHoursAgo = new Date(now - 24 * 60 * 60 * 1000);
-    const userFormRequest = await model.userFormRequest.findOne({
+    const userFormRequest = await model.userRequest.findOne({
       where: {
         userId,
         clientId,
@@ -38,7 +38,7 @@ const userService = {
   ) {
     const now = Date.now();
     const twentyFourHoursAgo = new Date(now - 24 * 60 * 60 * 1000);
-    const emailRequest = await model.userFormRequest.findOne({
+    const emailRequest = await model.userRequest.findOne({
       where: {
         userId,
         clientId,
@@ -47,7 +47,7 @@ const userService = {
       },
       order: [['createdAt', 'DESC']]
     });
-    const usernameRequest = await model.userFormRequest.findOne({
+    const usernameRequest = await model.userRequest.findOne({
       where: {
         userId,
         clientId,

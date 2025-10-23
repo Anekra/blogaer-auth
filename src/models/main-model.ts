@@ -11,7 +11,7 @@ import UserPasskey from './user-passkey';
 import UserSetting from './user-setting';
 import UserTotpSecret from './user-totp-secret';
 import SavedAccount from './saved-account';
-import UserFormRequest from './user-form-request';
+import UserRequest from './user-request';
 
 export type Models = {
   token: ReturnType<typeof Token>;
@@ -23,7 +23,7 @@ export type Models = {
   userPasskey: ReturnType<typeof UserPasskey>;
   userTotpSecret: ReturnType<typeof UserTotpSecret>;
   userSetting: ReturnType<typeof UserSetting>;
-  userFormRequest: ReturnType<typeof UserFormRequest>;
+  userRequest: ReturnType<typeof UserRequest>;
 };
 
 export type MainModel = Models & {
@@ -67,8 +67,6 @@ async function initMainModel() {
     logging: false
   });
 
-  await dbConnect(sequelize);
-
   mainModel = {
     token: Token(sequelize, DataTypes),
     savedAccount: SavedAccount(sequelize, DataTypes),
@@ -79,7 +77,7 @@ async function initMainModel() {
     userPasskey: UserPasskey(sequelize, DataTypes),
     userTotpSecret: UserTotpSecret(sequelize, DataTypes),
     userSetting: UserSetting(sequelize, DataTypes),
-    userFormRequest: UserFormRequest(sequelize, DataTypes),
+    userRequest: UserRequest(sequelize, DataTypes),
     dataTypes: DataTypes,
     sequelize
   };
@@ -88,6 +86,7 @@ async function initMainModel() {
       model.associate(mainModel);
     }
   });
+  await dbConnect(sequelize);
 
   return mainModel;
 }

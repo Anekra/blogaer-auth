@@ -10,7 +10,7 @@ import userFormRequestService from '../service/user-service';
 import { CommonStatus, EmailSubject } from '../../../utils/enums';
 import { AnyObj, AuthData, Social } from '../../../types';
 import { APIError, ErrCode } from 'encore.dev/api';
-import UserFormRequest from '../../../models/user-form-request';
+import UserRequest from '../../../models/user-request';
 import { col, fn, Op, where } from 'sequelize';
 import UserPasskey from '../../../models/user-passkey';
 import UserSetting from '../../../models/user-setting';
@@ -69,7 +69,7 @@ const userController = {
   }: PatchAccountReq) {
     const callMeta = currentRequest() as APICallMeta;
     const userFormRequest = callMeta.middlewareData
-      ?.userFormRequest as UserFormRequest;
+      ?.userFormRequest as UserRequest;
     const model = callMeta.middlewareData?.mainModel as MainModel;
     try {
       const authData = getAuth();
@@ -240,7 +240,7 @@ const userController = {
         throw new APIError(ErrCode.InvalidArgument, 'User agent is invalid!');
       }
       if (updatedData === 1) {
-        await model.userFormRequest.update(
+        await model.userRequest.update(
           { status: CommonStatus.Success },
           { where: { clientId: uAId, request: subject, limit } }
         );

@@ -125,7 +125,7 @@ const User = (sequelize: Sequelize, dataTypes: typeof DataTypes) => {
       foreignKey: 'user_id'
     });
 
-    user.hasMany(model.userFormRequest, {
+    user.hasMany(model.userRequest, {
       foreignKey: 'user_id'
     });
 

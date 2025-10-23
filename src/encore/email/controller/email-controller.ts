@@ -152,7 +152,7 @@ const emailController = {
       const otp = generateOtp();
       const html = emailService.createOtpHtml(otp);
       const date = new Date(Number(limit));
-      const foundRequest = await model.userFormRequest.findOne({
+      const foundRequest = await model.userRequest.findOne({
         where: { userId: user.id, request, limit: date }
       });
       const updated = await foundRequest?.update({ otp });
@@ -194,7 +194,7 @@ const emailController = {
 
         throw new APIError(ErrCode.InvalidArgument, 'User agent is invalid!');
       }
-      const foundRequest = await model.userFormRequest.findOne({
+      const foundRequest = await model.userRequest.findOne({
         where: {
           userId,
           clientId: uAId,

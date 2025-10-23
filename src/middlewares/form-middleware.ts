@@ -49,7 +49,7 @@ const formMiddleware = {
 
         throw new APIError(ErrCode.InvalidArgument, 'User agent is invalid!');
       }
-      const foundRequest = await model.userFormRequest.findOne({
+      const foundRequest = await model.userRequest.findOne({
         where: {
           userId: req.data.userId,
           clientId: uAId,
@@ -124,7 +124,7 @@ const formMiddleware = {
 
         throw new APIError(ErrCode.InvalidArgument, 'User agent is invalid!');
       }
-      const foundRequest = await model.userFormRequest.findOne({
+      const foundRequest = await model.userRequest.findOne({
         where: {
           userId: req.data.userId,
           clientId: uAId,

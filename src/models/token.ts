@@ -2,6 +2,7 @@
 import { Op } from 'sequelize';
 import type { MainModel, Models } from './main-model';
 import { DataTypes, Sequelize, Model } from 'sequelize';
+import { getMainModel } from '../utils/helper';
 
 interface TokenModel {
   refresh: string;
@@ -74,7 +75,7 @@ const Token = (sequelize: Sequelize, dataTypes: typeof DataTypes) => {
             `AFTER CREATE token >> userId: ${attributes.userId} has Logged in.`
           );
 
-          const { token } = attributes.sequelize.models as Models;
+          const { token } = await getMainModel();
           if ((await token.count()) > 1) {
             const { count } = await token.findAndCountAll({
               where: { clientId: attributes.clientId }
