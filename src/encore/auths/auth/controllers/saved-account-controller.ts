@@ -6,10 +6,9 @@ import { APIError, ErrCode } from 'encore.dev/api';
 import SavedAccount from '../../../../models/saved-account';
 import User from '../../../../models/user';
 import { DeleteSavedAccountReq, UAReq } from '../../../../types/request';
-import { DefaultRes } from '../../../../types';
 
 const savedAccountController = {
-  async getSavedAccounts({ userAgent }: UAReq): Promise<DefaultRes> {
+  async getSavedAccounts({ userAgent }: UAReq) {
     try {
       const callMeta = currentRequest() as APICallMeta;
       const model = callMeta.middlewareData?.mainModel as MainModel;
@@ -40,7 +39,7 @@ const savedAccountController = {
           model: model.user,
           attributes: ['id', 'username', 'email', ['picture', 'img']]
         },
-        attributes: ['clientId'],
+        attributes: ['id'],
         raw: true,
         nest: true
       })) as SavedAccount & { Users: User[] };
