@@ -3,7 +3,7 @@ import authController from '../../controllers/auth-controller';
 
 export const refreshToken = api(
   {
-    method: 'GET',
+    method: 'POST',
     path: '/auth-service/v1/auth/refresh',
     expose: true,
     tags: ['main-model']
@@ -13,7 +13,7 @@ export const refreshToken = api(
 
 export const logout = api(
   {
-    method: 'GET',
+    method: 'POST',
     path: '/auth-service/v1/auth/logout',
     expose: true,
     tags: ['main-model']
