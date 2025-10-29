@@ -5,4 +5,4 @@ encore.gen.cue
 node_modules
 /encore.gen
 .env
-blogaer_auth.db
+blogaer_auth.*
