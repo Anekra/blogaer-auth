@@ -3,7 +3,7 @@ import bcryptjs from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { RefreshDecoded } from '../../../../types';
 import { MainModel } from '../../../../models/main-model';
-import { catchError } from '../../../../utils/helper';
+import { catchError, generateRandomChars } from '../../../../utils/helper';
 import { APICallMeta, currentRequest } from 'encore.dev';
 import {
   LoginReq,
@@ -31,9 +31,25 @@ const authController = {
     try {
       const callMeta = currentRequest() as APICallMeta;
       const model = callMeta.middlewareData?.mainModel as MainModel;
+
+      const userExists = await model.user.findOne({
+        where: {
+          [Op.or]: [
+            { email },
+            where(fn('lower', col('username')), username.toLowerCase())
+          ]
+        }
+      });
+      if (userExists) {
+        console.log('REGISTER auth-controller >> Username already exists!');
+        throw new APIError(ErrCode.InvalidArgument, 'Username already exists!');
+      }
+
+      const name = `${email.split('@')[0]}${generateRandomChars(4)}`;
       const user = await model.user.create({
         username,
         email,
+        name,
         password: hashPassword,
         roleId: 2
       });
@@ -51,7 +67,7 @@ const authController = {
       );
 
       const clientId = crypto.randomUUID();
-      await model.token.create({
+      const { csrf } = await model.token.create({
         refresh: refreshToken,
         access: accessToken,
         userId: user.id,
@@ -83,13 +99,14 @@ const authController = {
 
       return {
         status: 'Registered',
-        message: 'User successfully registered',
+        message: 'User registered successfully.',
         data: {
+          clientId,
+          csrf,
           username: user.username,
           email: user.email,
-          role: user.roleId === 2 ? 'Author' : 'Admin',
-          refreshAt: new Date(now + 15 * 60 * 1000).getTime(),
-          clientId
+          name,
+          role: user.roleId === 2 ? 'Author' : 'Admin'
         }
       };
     } catch (error) {
@@ -166,7 +183,7 @@ const authController = {
     if (subject !== EmailSubject.VerifyEmail) {
       console.warn('VERIFY EMAIL auth-controller >> Not a valid subject!');
       res.writeHead(302, {
-        Location: `${process.env.CLIENT_URL}/auth/verify-status?request=${subject}&verified=false`
+        Location: `${process.env.CLIENT_URL}/auth/email/status/${username}?request=${subject}&verified=false`
       });
       res.end();
     }
@@ -190,11 +207,11 @@ const authController = {
       });
 
       if (user && request) {
-        let Location = `${process.env.CLIENT_URL}/auth/verify-status?request=${subject}&verified=true&message=email-already-verified`;
+        let Location = `${process.env.CLIENT_URL}/auth/email/status/${username}?request=${subject}&verified=true&message=email-already-verified`;
         if (!user.verified) {
           user.update({ verified: true });
           request.update({ status: CommonStatus.Success });
-          Location = `${process.env.CLIENT_URL}/auth/verify-status?request=${subject}&verified=true`;
+          Location = `${process.env.CLIENT_URL}/auth/email/status/${username}?request=${subject}&verified=true`;
         }
         res.writeHead(302, { Location });
         res.end();
@@ -203,53 +220,52 @@ const authController = {
           'VERIFY EMAIL auth-controller >> Verify email request not found!'
         );
         res.writeHead(302, {
-          Location: `${process.env.CLIENT_URL}/auth/verify-status?request=${subject}&verified=false&message=request-not-found`
+          Location: `${process.env.CLIENT_URL}/auth/email/status/${username}?request=${subject}&verified=false&message=request-not-found`
         });
         res.end();
       }
     } else {
       console.warn('VERIFY EMAIL auth-controller >> Invalid request!');
       res.writeHead(302, {
-        Location: `${process.env.CLIENT_URL}/auth/verify-status?request=${subject}&verified=false&message=invalid-request`
+        Location: `${process.env.CLIENT_URL}/auth/email/status/${username}?request=${subject}&verified=false&message=invalid-request`
       });
       res.end();
     }
   },
   async refreshToken({ xAuth, userAgent }: RefreshTokenReq) {
+    // NEED TO CHECK IF THE REFRESH TOKEN API STILL WORKS
     if (!xAuth.startsWith('Bearer')) return null;
     const callMeta = currentRequest() as APICallMeta;
     const model = callMeta.middlewareData?.mainModel as MainModel;
-    let decodedUsername = '';
-    let refreshToken = '';
+    const clientId = xAuth.split(' ')[1];
+    if (!clientId || clientId === 'undefined') {
+      return APIError.unauthenticated('Missing clientId!');
+    }
+
+    const token = await model.token.findOne({
+      where: { clientId }
+    });
+    if (!token) return APIError.permissionDenied('Token not found!');
+
+    const refreshToken = token.refresh;
+    const foundToken = (await model.token.findByPk(refreshToken, {
+      include: [
+        {
+          model: model.user,
+          attributes: ['id', 'username', 'roleId']
+        }
+      ]
+    })) as Token & { User: User };
+    const foundUserId = foundToken.User.id;
+    if (!foundUserId) return APIError.notFound('User not found!');
+
+    const decodedToken = jwt.verify(
+      refreshToken,
+      `${process.env.REFRESH_TOKEN_SECRET}`
+    ) as (string | jwt.JwtPayload) & RefreshDecoded;
+    const decodedUsername = decodedToken.UserInfo.username;
+
     try {
-      const clientId = xAuth.split(' ')[1];
-      if (!clientId || clientId === 'undefined') {
-        return APIError.unauthenticated('Missing clientId!');
-      }
-
-      const token = await model.token.findOne({
-        where: { clientId }
-      });
-      if (!token) return APIError.permissionDenied('Token not found!');
-
-      refreshToken = token.refresh;
-      const foundToken = (await model.token.findByPk(refreshToken, {
-        include: [
-          {
-            model: model.user,
-            attributes: ['id', 'username', 'roleId']
-          }
-        ]
-      })) as Token & { User: User };
-      const foundUserId = foundToken.User.id;
-      if (!foundUserId) return APIError.notFound('User not found!');
-
-      const decodedToken = jwt.verify(
-        refreshToken,
-        `${process.env.REFRESH_TOKEN_SECRET}`
-      ) as (string | jwt.JwtPayload) & RefreshDecoded;
-      decodedUsername = decodedToken.UserInfo.username;
-
       // Refresh token reuse detection!
       if (!foundToken) {
         if (decodedUsername) {
