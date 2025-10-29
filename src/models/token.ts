@@ -1,8 +1,10 @@
 'use strict';
+
 import { Op } from 'sequelize';
 import type { MainModel, Models } from './main-model';
 import { DataTypes, Sequelize, Model } from 'sequelize';
 import { getMainModel } from '../utils/helper';
+import * as crypto from 'crypto';
 
 interface TokenModel {
   refresh: string;
@@ -10,6 +12,7 @@ interface TokenModel {
   userId: string;
   clientId: string;
   loginWith?: string;
+  csrf?: string;
   refreshExp?: typeof DataTypes.DATE;
   accessExp?: typeof DataTypes.DATE;
   createdAt?: typeof DataTypes.DATE;
@@ -49,6 +52,10 @@ const Token = (sequelize: Sequelize, dataTypes: typeof DataTypes) => {
       loginWith: {
         allowNull: false,
         defaultValue: 'credentials',
+        type: dataTypes.STRING
+      },
+      csrf: {
+        defaultValue: crypto.randomBytes(32),
         type: dataTypes.STRING
       },
       refreshExp: {
