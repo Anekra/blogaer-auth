@@ -8,16 +8,18 @@
   "scripts": {
     "dev": ". .env && encore run --port 3030",
     "build": "encore build docker auth-service:latest",
-    "db:drop": "bun x sequelize-cli db:drop",
-    "db:create": "bun x sequelize-cli db:create",
-    "db:migrate": "bun x sequelize-cli db:migrate",
-    "db:migrate:undo": "bun x sequelize-cli db:migrate:undo",
-    "db:migrate:undo:all": "bun x sequelize-cli db:migrate:undo:all",
-    "db:seed:all": "bun x sequelize-cli db:seed:all",
-    "db:seed:role": "bun x sequelize-cli db:seed --seed ./src/sequelize/seeders/default-roles.ts",
-    "db:seed:undo:all": "bun x sequelize-cli db:seed:undo:all"
+    "lint": "biome check . --apply",
+    "db:drop": ". .env && bun x sequelize-cli db:drop",
+    "db:create": ". .env && bun x sequelize-cli db:create",
+    "db:migrate": ". .env && bun x sequelize-cli db:migrate",
+    "db:migrate:undo": ". .env && bun x sequelize-cli db:migrate:undo",
+    "db:migrate:undo:all": ". .env && bun x sequelize-cli db:migrate:undo:all",
+    "db:seed:all": ". .env && bun x sequelize-cli db:seed:all",
+    "db:seed:role": ". .env && bun x sequelize-cli db:seed --seed ./src/sequelize/seeders/default-roles.ts",
+    "db:seed:undo:all": ". .env && bun x sequelize-cli db:seed:undo:all"
   },
   "devDependencies": {
+    "@biomejs/biome": "2.3.5",
     "@types/amqplib": "^0.10.7",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^20.5.7",
