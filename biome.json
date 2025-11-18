@@ -23,13 +23,18 @@
 				}
 			},
 			"correctness": {
-        "noInvalidPositionAtImportRule": "warn"
-      }
+				"noInvalidPositionAtImportRule": "warn",
+				"noUnusedImports": {
+					"level": "warn",
+					"fix": "safe"
+				}
+			}
 		}
 	},
 	"javascript": {
 		"formatter": {
-			"quoteStyle": "single"
+			"quoteStyle": "single",
+			"trailingCommas": "none"
 		}
 	},
 	"assist": {
@@ -40,12 +45,8 @@
 					"level": "on",
 					"options": {
 						"identifierOrder": "natural",
-            "groups": [
-              ":ALIAS:",
-              ":URL:",
-              ":NODE:"
-            ]
-          }
+						"groups": [":ALIAS:", ":URL:", ":NODE:"]
+					}
 				}
 			}
 		}
