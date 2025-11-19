@@ -10,6 +10,9 @@ interface TokenModel {
 	clientId: string;
 	loginWith?: string;
 	csrf?: string;
+	userAgent: string;
+	ipAddress: string;
+	revoked: boolean;
 	refreshExp?: typeof DataTypes.DATE;
 	accessExp?: typeof DataTypes.DATE;
 	createdAt?: typeof DataTypes.DATE;
@@ -54,6 +57,15 @@ const Token = (sequelize: Sequelize, dataTypes: typeof DataTypes) => {
 			csrf: {
 				defaultValue: crypto.randomBytes(32).toString('hex'),
 				type: dataTypes.STRING
+			},
+			userAgent: {
+				type: dataTypes.STRING
+			},
+			ipAddress: {
+				type: dataTypes.STRING
+			},
+			revoked: {
+				type: dataTypes.BOOLEAN
 			},
 			refreshExp: {
 				defaultValue: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
