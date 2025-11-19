@@ -1,7 +1,7 @@
 /** biome-ignore-all lint/suspicious/noExplicitAny: can't replace any for this file */
 import type {
 	AuthenticationResponseJSON,
-	RegistrationResponseJSON,
+	RegistrationResponseJSON
 } from '@simplewebauthn/server';
 import type { Header } from 'encore.dev/api';
 import type { TwoFAMethod } from '../utils/enums';
@@ -23,7 +23,8 @@ export interface UsernameReq {
 }
 
 export interface UAReq {
-	userAgent: Header<'user-agent'>;
+	ua: Header<'user-agent'>;
+	xff: Header<'x-forward-for'>;
 }
 
 export interface RegisterReq extends UsernameReq, UAReq {
