@@ -20,7 +20,7 @@ import emailService from '../../../email/service/email-service';
 import jwtService from '../services/jwt-service';
 
 const authController = {
-	async register({ userAgent, username, email, password }: RegisterReq) {
+	async register({ ua, xff, username, email, password }: RegisterReq) {
 		if (!password) {
 			console.log('REGISTER auth-controller >> Password field is empty!');
 			throw APIError.invalidArgument('Password is empty!');
@@ -63,14 +63,18 @@ const authController = {
 				user.id,
 				user.username,
 				user.roleId,
-				userAgent
+				ua
 			);
 
+			const ip = xff ? xff.split(',')[0].trim() : "127.0.0.1";
 			const clientId = crypto.randomUUID();
 			const { csrf } = await model.token.create({
 				refresh: refreshToken,
 				access: accessToken,
 				userId: user.id,
+				ipAddress: ip,
+				userAgent: ua,
+				revoked: false,
 				clientId
 			});
 
@@ -114,7 +118,7 @@ const authController = {
 			throw err;
 		}
 	},
-	async login({ userAgent, emailOrUsername, password }: LoginReq) {
+	async login({ ua, xff, emailOrUsername, password }: LoginReq) {
 		const callMeta = currentRequest() as APICallMeta;
 		const model = callMeta.middlewareData?.mainModel as MainModel;
 		const payload = emailOrUsername.trim();
@@ -146,13 +150,17 @@ const authController = {
 				user.id,
 				user.username,
 				user.roleId,
-				userAgent
+				ua
 			);
+			const ip = xff ? xff.split(',')[0].trim() : "127.0.0.1";
 			const clientId = crypto.randomUUID();
 			await model.token.create({
 				refresh: refreshToken,
 				access: accessToken,
 				userId: user.id,
+				ipAddress: ip,
+				userAgent: ua,
+				revoked: false,
 				clientId
 			});
 
@@ -234,7 +242,7 @@ const authController = {
 			res.end();
 		}
 	},
-	async refreshToken({ xAuth, userAgent }: RefreshTokenReq) {
+	async refreshToken({ xAuth, ua: userAgent }: RefreshTokenReq) {
 		// NEED TO CHECK IF THE REFRESH TOKEN API STILL WORKS
 		if (!xAuth.startsWith('Bearer')) return null;
 		const callMeta = currentRequest() as APICallMeta;
