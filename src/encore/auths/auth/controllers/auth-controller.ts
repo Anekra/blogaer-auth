@@ -323,7 +323,7 @@ const authController = {
 			}
 
 			await model.token.update(
-				{ revoked: true },
+				{ revoked: true, deletedAt: new Date(Date.now() + 60 * 1000) },
 				{ where: { refresh: refreshToken }, transaction }
 			);
 
