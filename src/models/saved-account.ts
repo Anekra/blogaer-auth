@@ -1,58 +1,57 @@
-'use strict';
-import { DataTypes, Model, Sequelize } from 'sequelize';
+import type { DataTypes, Model, Sequelize } from 'sequelize';
 import type { MainModel } from './main-model';
-import User from './user';
+import type User from './user';
 
 interface SavedAccountModel {
-  id: string;
-  createdAt?: string;
-  updatedAt?: string;
+	id: string;
+	createdAt?: string;
+	updatedAt?: string;
 }
 
 interface SavedAccount extends Model<SavedAccountModel>, SavedAccountModel {
-  addUser: (user: any, options?: any) => Promise<any>;
-  getUsers: (options?: any) => Promise<User[]>;
-  removeUser: (user: any, options?: any) => Promise<any>;
+	addUser: (user: unknown, options?: unknown) => Promise<unknown>;
+	getUsers: (options?: unknown) => Promise<User[]>;
+	removeUser: (user: unknown, options?: unknown) => Promise<unknown>;
 }
 
 type SavedAccountStatic = typeof Model & {
-  new (values?: Record<string, unknown>, options?: any): SavedAccount;
-  associate: (model: MainModel) => void;
+	new (values?: Record<string, unknown>, options?: unknown): SavedAccount;
+	associate: (model: MainModel) => void;
 };
 
 const SavedAccount = (
-  sequelize: Sequelize,
-  dataTypes: typeof DataTypes
+	sequelize: Sequelize,
+	dataTypes: typeof DataTypes
 ): SavedAccountStatic => {
-  const savedAccount = sequelize.define<SavedAccount>(
-    'SavedAccount',
-    {
-      id: {
-        allowNull: false,
-        primaryKey: true,
-        unique: true,
-        type: dataTypes.STRING
-      },
-      createdAt: {
-        type: dataTypes.DATE
-      },
-      updatedAt: {
-        type: dataTypes.DATE
-      }
-    },
-    { tableName: 'saved_accounts', underscored: true }
-  ) as SavedAccountStatic;
+	const savedAccount = sequelize.define<SavedAccount>(
+		'SavedAccount',
+		{
+			id: {
+				allowNull: false,
+				primaryKey: true,
+				unique: true,
+				type: dataTypes.STRING
+			},
+			createdAt: {
+				type: dataTypes.DATE
+			},
+			updatedAt: {
+				type: dataTypes.DATE
+			}
+		},
+		{ tableName: 'saved_accounts', underscored: true }
+	) as SavedAccountStatic;
 
-  savedAccount.associate = (model: MainModel) => {
-    if (model.user) {
-      savedAccount.belongsToMany(model.user, {
-        through: 'user_saved_accounts',
-        timestamps: false
-      });
-    }
-  };
+	savedAccount.associate = (model: MainModel) => {
+		if (model.user) {
+			savedAccount.belongsToMany(model.user, {
+				through: 'user_saved_accounts',
+				timestamps: false
+			});
+		}
+	};
 
-  return savedAccount;
+	return savedAccount;
 };
 
 export default SavedAccount;
