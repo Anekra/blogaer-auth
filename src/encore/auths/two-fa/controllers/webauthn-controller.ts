@@ -4,7 +4,6 @@ import {
 	type PublicKeyCredentialCreationOptionsJSON,
 	type PublicKeyCredentialRequestOptionsJSON,
 	type VerifiedAuthenticationResponse,
-	type VerifiedRegistrationResponse,
 	verifyAuthenticationResponse,
 	verifyRegistrationResponse
 } from '@simplewebauthn/server';
@@ -58,13 +57,12 @@ const webauthnController = {
 				attributes: ['id'],
 				include: {
 					model: model.userPasskey,
-					attributes: ['id', 'transports', 'clientId', 'userId'],
-					where: { clientId: uAId }
+					attributes: ['id', 'transports', 'userId'],
 				}
 			})) as User & { UserPasskeys: UserPasskey[] };
 
 			const userPasskey = user.UserPasskeys.find(
-				(passkey) => passkey.clientId === uAId && passkey.userId === user.id
+				(passkey) => passkey.userId === user.id
 			);
 			if (!userPasskey) {
 				console.warn(
@@ -381,10 +379,7 @@ const webauthnController = {
 			throw err;
 		}
 	},
-	async verifyRegisterWebauthn({
-		options,
-		ua
-	}: WebauthnVerifyRegisterReq) {
+	async verifyRegisterWebauthn({ options, ua }: WebauthnVerifyRegisterReq) {
 		const callMeta = currentRequest() as APICallMeta;
 		const model = callMeta.middlewareData?.mainModel as MainModel;
 		const inMemModel = callMeta.middlewareData?.inMemModel as InMemoryModel;
@@ -421,8 +416,7 @@ const webauthnController = {
 			}
 
 			const isMobile = uAData.platform === 'mobile';
-			let verification: VerifiedRegistrationResponse;
-			verification = await verifyRegistrationResponse({
+			const verification = await verifyRegistrationResponse({
 				response: options,
 				requireUserVerification: isMobile,
 				expectedChallenge: memoryOptions.challenge,
@@ -466,7 +460,6 @@ const webauthnController = {
 					await model.userPasskey.create({
 						id: credential.id,
 						userId,
-						clientId,
 						clientBrowser,
 						clientOs,
 						isMobile,
@@ -503,12 +496,7 @@ const webauthnController = {
 			const model = callMeta.middlewareData?.mainModel as MainModel;
 			const authData = getAuth();
 			const userId = authData.userID;
-			const token = await model.token.findByPk(authData.refreshToken, {
-				attributes: ['clientId']
-			});
-
-			const clientId = token?.clientId;
-			await model.userPasskey.destroy({ where: { userId, clientId } });
+			await model.userPasskey.destroy({ where: { userId } });
 
 			const userSecret = await model.userTotpSecret.findOne({
 				where: { userId }
