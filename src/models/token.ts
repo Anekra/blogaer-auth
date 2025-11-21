@@ -13,16 +13,17 @@ interface TokenModel {
 	userAgent: string;
 	ipAddress: string;
 	revoked: boolean;
-	refreshExp?: typeof DataTypes.DATE;
-	accessExp?: typeof DataTypes.DATE;
-	createdAt?: typeof DataTypes.DATE;
-	updatedAt?: typeof DataTypes.DATE;
+	refreshExp?: Date;
+	accessExp?: Date;
+	createdAt?: Date;
+	updatedAt?: Date;
+	deletedAt?: Date;
 }
 
 interface Token extends Model<TokenModel>, TokenModel {}
 
 type TokenStatic = typeof Model & {
-	new (values?: Record<string, unknown>, options?: any): Token;
+	new (values?: Record<string, unknown>, options?: unknown): Token;
 	associate: (model: MainModel) => void;
 };
 
@@ -79,6 +80,9 @@ const Token = (sequelize: Sequelize, dataTypes: typeof DataTypes) => {
 				type: dataTypes.DATE
 			},
 			updatedAt: {
+				type: dataTypes.DATE
+			},
+			deletedAt: {
 				type: dataTypes.DATE
 			}
 		},
