@@ -1,4 +1,3 @@
-/** biome-ignore-all lint/suspicious/noExplicitAny: can't replace any for this file */
 import type {
 	AuthenticationResponseJSON,
 	RegistrationResponseJSON
@@ -6,11 +5,15 @@ import type {
 import type { Header } from 'encore.dev/api';
 import type { TwoFAMethod } from '../utils/enums';
 
-export interface AuthReq {
+export interface CSRFReq {
+	csrf: Header<'x-csrf'>;
+}
+
+export interface AuthReq extends CSRFReq {
 	authorization: Header<'authorization'>;
 }
 
-export interface XAuthReq {
+export interface XAuthReq extends CSRFReq {
 	xAuth: Header<'x-authorization'>;
 }
 
@@ -64,10 +67,10 @@ export interface WebauthnVerifyRegisterReq extends UAReq {
 }
 
 export interface PatchAccountReq extends UsernameReq {
-	email: string;
-	name: string;
-	description: string;
-	picture: string;
+	email?: string;
+	name?: string;
+	description?: string;
+	picture?: string;
 }
 
 export interface PatchSocialReq {
@@ -105,7 +108,7 @@ export interface GetUpdateEmailOtpTime extends UAReq {
 export interface AddPostReq {
 	title: string;
 	text: string;
-	content: any[];
+	content: unknown[];
 	tags: string;
 }
 
@@ -116,7 +119,7 @@ export interface PatchPostReq extends AddPostReq {
 export interface PostsByPageReq {
 	number: number;
 	size: number;
-	query: any[];
+	query: unknown[];
 	categories: string[];
 	tags: string[];
 }
@@ -128,13 +131,13 @@ export interface PostByIdReq {
 export interface DraftsByPageReq {
 	number: number;
 	size: number;
-	query: any[];
+	query: unknown[];
 }
 
 export interface AddDraftReq {
 	title: string;
 	text: string;
-	content: any[];
+	content: unknown[];
 }
 
 export interface PatchDraftReq extends AddDraftReq {
