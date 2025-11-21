@@ -59,8 +59,8 @@ export function generateUAId(userAgent: string) {
 	return { uAId, uAData };
 }
 
-export function getUAData(clientId: string) {
-	const decoded = Buffer.from(clientId, 'base64').toString();
+export function getUAData(uAId: string) {
+	const decoded = Buffer.from(uAId, 'base64').toString();
 	const divider = process.env.USER_AGENT_DIVIDER;
 	const [secret, value] = decoded.split(`${divider}`);
 	const SECRET = process.env.USER_AGENT_SECRET;
@@ -95,12 +95,12 @@ export async function closeChannel(timeout: NodeJS.Timeout, channel: Channel) {
 			console.warn('CLOSE CHANNEL helper >>', 'Set timeout!');
 			await channel.close();
 		}
-	} catch (error) {
+	} catch (_) {
 		console.warn('CLOSE CHANNEL helper >>', 'Set timeout error!');
 	}
 }
 
-export async function parseJsonBody<T = any>(
+export async function parseJsonBody<T>(
 	req: IncomingMessage | RawRequest
 ): Promise<T> {
 	const chunks = [];
