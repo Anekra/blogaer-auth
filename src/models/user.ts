@@ -17,11 +17,14 @@ interface UserModel {
 }
 
 interface User extends Model<UserModel>, UserModel {
-	removeSavedAccount: (savedAccount: any, options?: any) => Promise<any>;
+	removeSavedAccount: (
+		savedAccount: unknown,
+		options?: unknown
+	) => Promise<unknown>;
 }
 
 type UserStatic = typeof Model & {
-	new (values?: Record<string, unknown>, options?: any): User;
+	new (values?: Record<string, unknown>, options?: unknown): User;
 	associate: (model: MainModel) => void;
 };
 
@@ -89,7 +92,7 @@ const User = (sequelize: Sequelize, dataTypes: typeof DataTypes) => {
 			hooks: {
 				afterCreate(user) {
 					console.log(
-						`AFTER CREATE user >> (user: ${user.username} | email: ${user.email}) has REGISTERED.`
+						`AFTER CREATE user >> ${user.email} has been REGISTERED.`
 					);
 
 					return;
