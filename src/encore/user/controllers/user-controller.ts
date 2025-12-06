@@ -68,13 +68,15 @@ const userController = {
 		picture
 	}: PatchAccountReq) {
 		const callMeta = currentRequest() as APICallMeta;
-		const userFormRequest = callMeta.middlewareData
-			?.userFormRequest as UserRequest;
+		let userFormRequest = null;
+		if (email !== 'undefined' || username !== 'undefined') {
+			userFormRequest = callMeta.middlewareData?.userFormRequest as UserRequest;
+		}
 		const model = callMeta.middlewareData?.mainModel as MainModel;
 		try {
 			const authData = getAuth();
 			const userId = authData.userID;
-			if (email) {
+			if (email !== 'undefined') {
 				if (userFormRequest) {
 					const emailExist = await model.user.findOne({
 						where: {
@@ -93,7 +95,7 @@ const userController = {
 					}
 				}
 			}
-			if (username) {
+			if (username !== 'undefined') {
 				if (userFormRequest) {
 					const payload = (username as string).trim();
 					const usernameExist = await model.user.findOne({
@@ -129,7 +131,10 @@ const userController = {
 					message: 'User data successfully updated.'
 				};
 			} else {
-				return;
+				return {
+					status: 'Success',
+					message: 'No content.'
+				};
 			}
 		} catch (error) {
 			const [err] = catchError('PATCH ACCOUNT user-controller', error);
