@@ -3,11 +3,11 @@ import type { IncomingMessage } from 'http';
 import type { Channel } from 'amqplib';
 import { APIError, ErrCode, type RawRequest } from 'encore.dev/api';
 import { UAParser } from 'ua-parser-js';
-import initMainModel from '../models/main-model';
+import mainModel from '../models/main-model';
 import type { UserAgent } from '../types';
 
 export async function getAllUserImgsAndUsernames() {
-	const model = await initMainModel;
+	const model = await mainModel;
 	if (!model) return;
 	return await model.user.findAll({
 		attributes: ['id', 'username', 'picture']
@@ -15,7 +15,7 @@ export async function getAllUserImgsAndUsernames() {
 }
 
 export async function getUserById(userId: string) {
-	const model = await initMainModel;
+	const model = await mainModel;
 	if (!model) return;
 	return model.user.findByPk(userId, {
 		attributes: ['username', 'picture']
@@ -35,7 +35,7 @@ export function generateRandomChars(length: number) {
 }
 
 export async function getMainModel() {
-	return await initMainModel;
+	return await mainModel;
 }
 
 export function generateUAId(userAgent: string) {
