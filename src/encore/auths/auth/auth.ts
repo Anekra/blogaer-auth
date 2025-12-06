@@ -7,6 +7,7 @@ import type { AccessDecoded, AuthData } from '../../../types';
 import type { AuthReq } from '../../../types/request';
 
 async function mainAuth({ authorization, csrf }: AuthReq): Promise<AuthData> {
+	console.log('MAIN AUTH CALLED');
 	if (!authorization.startsWith('Bearer')) {
 		throw APIError.unauthenticated('Bearer missing!');
 	}
@@ -35,6 +36,7 @@ async function mainAuth({ authorization, csrf }: AuthReq): Promise<AuthData> {
 		`${process.env.ACCESS_TOKEN_SECRET}`
 	) as (string | jwt.JwtPayload) & AccessDecoded;
 	if (!Object.hasOwn(foundToken, 'UserInfo')) {
+		console.log(foundToken);
 		throw APIError.permissionDenied('Invalid credentials!');
 	}
 
