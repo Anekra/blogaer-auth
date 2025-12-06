@@ -1,13 +1,13 @@
+import { api } from 'encore.dev/api';
 import { CronJob } from 'encore.dev/cron';
-import initMainModel from '../../../../models/main-model';
 import { Op } from 'sequelize';
+import mainModel from '../../../../models/main-model';
 
-export async function deleteToken() {
+export const deleteToken = api({}, async () => {
 	console.log('DELETE TOKEN token-job >> Starting revoked token clean up...');
-
 	try {
 		const oneMinuteAgo = new Date(Date.now() - 60 * 1000);
-		const model = await initMainModel;
+		const model = await mainModel;
 		const deletedCount = await model.token.destroy({
 			where: {
 				revoked: true,
@@ -28,7 +28,7 @@ export async function deleteToken() {
 		console.error('DELETE TOKEN token-job >> Failed to cleanup tokens:', error);
 		throw error;
 	}
-}
+});
 
 const _ = new CronJob('delete-revoked-tokens', {
 	title: 'Delete revoked tokens',
