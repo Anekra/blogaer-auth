@@ -5,16 +5,14 @@ import type {
 import type { Header } from 'encore.dev/api';
 import type { TwoFAMethod } from '../utils/enums';
 
-export interface CSRFReq {
+export interface AuthReq {
+	authorization: Header<'authorization'>;
 	csrf: Header<'x-csrf'>;
 }
 
-export interface AuthReq extends CSRFReq {
-	authorization: Header<'authorization'>;
-}
-
-export interface XAuthReq extends CSRFReq {
+export interface XAuthReq {
 	xAuth: Header<'x-authorization'>;
+	csrf: Header<'x-semi-csrf'>;
 }
 
 export interface EmailOrUsernameReq {
@@ -27,7 +25,7 @@ export interface UsernameReq {
 
 export interface UAReq {
 	ua: Header<'user-agent'>;
-	xff: Header<'x-forward-for'>;
+	xff: Header<'x-forwarded-for'>;
 }
 
 export interface RegisterReq extends UsernameReq, UAReq {
@@ -66,8 +64,9 @@ export interface WebauthnVerifyRegisterReq extends UAReq {
 	options: RegistrationResponseJSON;
 }
 
-export interface PatchAccountReq extends UsernameReq {
+export interface PatchAccountReq {
 	email?: string;
+	username?: string;
 	name?: string;
 	description?: string;
 	picture?: string;
