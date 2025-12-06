@@ -1,10 +1,3 @@
-/** biome-ignore-all lint/suspicious/noExplicitAny: can't replace any for this file */
-export interface DefaultRes {
-	status: string;
-	data?: any;
-	message?: string;
-}
-
 export type UserAgent = {
 	browser: string;
 	cpu: string;
@@ -38,7 +31,7 @@ export type Social = {
 	gitlab: string;
 };
 
-export type AnyObj = { [key: string]: any };
+export type AnyObj = { [key: string]: unknown };
 
 export interface AuthData {
 	userID: string;
