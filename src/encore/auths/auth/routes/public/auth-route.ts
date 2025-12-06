@@ -1,6 +1,6 @@
 import { api } from 'encore.dev/api';
-import type { RegisterReq } from '../../../../../types/request';
-import type { RegisterRes } from '../../../../../types/response';
+import type { LoginReq, RegisterReq } from '../../../../../types/request';
+import type { LoginRes, RegisterRes } from '../../../../../types/response';
 import authController from '../../controllers/auth-controller';
 
 export const register = api<RegisterReq, Promise<RegisterRes>>(
@@ -13,7 +13,7 @@ export const register = api<RegisterReq, Promise<RegisterRes>>(
 	authController.register
 );
 
-export const login = api(
+export const login = api<LoginReq, Promise<LoginRes>>(
 	{
 		method: 'POST',
 		path: '/auth-service/v1/auth/login',
