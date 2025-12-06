@@ -12,13 +12,6 @@ const savedAccountController = {
 		try {
 			const callMeta = currentRequest() as APICallMeta;
 			const model = callMeta.middlewareData?.mainModel as MainModel;
-			// temp
-			await model.sequelize.query('DELETE FROM users');
-			await model.sequelize.query('DELETE FROM tokens');
-			await model.sequelize.query(
-				"DELETE FROM sqlite_sequence WHERE name = 'user_requests'"
-			);
-			await model.sequelize.query('DELETE FROM user_requests');
 
 			const aWeekAgo = new Date();
 			aWeekAgo.setDate(aWeekAgo.getDate() - 7);
