@@ -15,7 +15,7 @@ interface UserSettingModel {
 interface UserSetting extends Model<UserSettingModel>, UserSettingModel {}
 
 type UserSettingStatic = typeof Model & {
-	new (values?: Record<string, unknown>, options?: any): UserSetting;
+	new (values?: Record<string, unknown>, options?: unknown): UserSetting;
 	associate: (model: MainModel) => void;
 };
 
