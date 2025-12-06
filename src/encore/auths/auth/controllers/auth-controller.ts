@@ -1,5 +1,5 @@
-import * as crypto from 'crypto';
-import type { IncomingMessage, ServerResponse } from 'http';
+import * as crypto from 'node:crypto';
+import type { IncomingMessage, ServerResponse } from 'node:http';
 import bcryptjs from 'bcryptjs';
 import { type APICallMeta, currentRequest } from 'encore.dev';
 import { APIError, ErrCode } from 'encore.dev/api';
@@ -116,7 +116,9 @@ const authController = {
 					username: user.username,
 					email: user.email,
 					name,
-					role: user.roleId === 2 ? 'Author' : 'Admin'
+					exp: Date.now() / 1000 + 10 * 60,
+					role: user.roleId === 2 ? 'Author' : 'Admin',
+					isVerified: user.verified ?? false
 				}
 			};
 		} catch (error) {
@@ -140,17 +142,14 @@ const authController = {
 			const errMsg = `LOGIN auth-controller >> ${
 				!user?.password ? 'Password field is empty!' : "Username doesn't exist!"
 			}`;
-			console.warn(errMsg);
-
-			throw new APIError(ErrCode.InvalidArgument, errMsg);
+			throw APIError.invalidArgument(errMsg);
 		}
 		const correctPassword = bcryptjs.compare(password, user.password);
 		if (!correctPassword) {
-			console.warn('LOGIN auth-controller >> Password is incorrect!');
-			throw new APIError(ErrCode.InvalidArgument, 'Password is incorrect!');
+			throw APIError.invalidArgument('Password is incorrect!');
 		}
 		try {
-			if (!user.id) return APIError.notFound('User not found!');
+			if (!user.id) throw APIError.notFound('User not found!');
 
 			const [accessToken, refreshToken] = await jwtService.generateJwt(
 				user.id,
@@ -160,7 +159,7 @@ const authController = {
 			);
 			const ip = xff ? xff.split(',')[0].trim() : '127.0.0.1';
 			const clientId = crypto.randomUUID();
-			await model.token.create({
+			const { csrf } = await model.token.create({
 				refresh: refreshToken,
 				access: accessToken,
 				userId: user.id,
@@ -172,15 +171,18 @@ const authController = {
 
 			return {
 				status: 'Success',
+				message: 'User logged in successfully.',
 				data: {
+					clientId,
+					csrf,
 					username: user.username,
-					name: user.name,
 					email: user.email,
+					name: user.name,
 					desc: user.description,
-					role: user.roleId === 1 ? 'Admin' : 'Author',
 					img: user.picture,
-					access: accessToken,
-					refresh: refreshToken
+					exp: Date.now() / 1000 + 10 * 60,
+					role: user.roleId === 1 ? 'Admin' : 'Author',
+					isVerified: user.verified ?? false
 				}
 			};
 		} catch (error) {
@@ -189,8 +191,6 @@ const authController = {
 		}
 	},
 	async verifyEmail(req: IncomingMessage, res: ServerResponse) {
-		// need to fix the patch feature for the display name after email verified
-		// and fix redirect conditions related to email verification
 		const url = new URL(`${process.env.BASE_URL}${req.url}`);
 		const params = url.searchParams;
 		const username = params.get('username');
@@ -248,13 +248,16 @@ const authController = {
 			res.end();
 		}
 	},
-	async refreshToken({ xAuth, ua, xff }: RefreshTokenReq) {
+	async refreshToken({ xAuth, csrf, ua, xff }: RefreshTokenReq) {
 		if (!xAuth.startsWith('Bearer')) {
 			throw APIError.unauthenticated('Missing bearer!');
 		}
-
+		if (!csrf || csrf === 'undefined') {
+			throw APIError.unauthenticated('Missing CSRF token!');
+		}
 		const callMeta = currentRequest() as APICallMeta;
 		const model = callMeta.middlewareData?.mainModel as MainModel;
+
 		const clientId = xAuth.split(' ')[1];
 		if (!clientId || clientId === 'undefined') {
 			throw APIError.unauthenticated('Missing clientId!');
@@ -268,11 +271,15 @@ const authController = {
 				include: [
 					{
 						model: model.user,
-						attributes: ['id', 'username', 'roleId']
+						attributes: ['id', 'username', 'roleId', 'verified']
 					}
 				],
 				transaction
 			})) as Token & { User: User };
+
+			if (tokenJoin.csrf !== csrf) {
+				throw APIError.permissionDenied('CSRF token mismatch!');
+			}
 
 			if (!tokenJoin || !tokenJoin.User.id) {
 				throw APIError.notFound('User not found!');
@@ -311,7 +318,7 @@ const authController = {
 			}
 
 			const ip = xff ? xff.split(',')[0].trim() : '127.0.0.1';
-			const { uAId } = generateUAId(ua); // Hash the incoming UA
+			const { uAId } = generateUAId(ua);
 
 			if (tokenJoin.ipAddress !== ip || tokenJoin.userAgent !== uAId) {
 				await model.token.destroy({
@@ -334,7 +341,7 @@ const authController = {
 				uAId
 			);
 			const newClientId = crypto.randomUUID();
-			const { csrf } = await model.token.create(
+			const { csrf: newCsrf } = await model.token.create(
 				{
 					refresh: newRefreshToken,
 					access: accessToken,
@@ -346,9 +353,10 @@ const authController = {
 				},
 				{ transaction }
 			);
-			const exp: number = Date.now() / 1000 + 10 * 60; // matching jwt expiry time
+			const exp: number = Date.now() / 1000 + 10 * 60;
 
 			await transaction.commit();
+			console.log('REFRESH', tokenJoin.User);
 
 			return {
 				status: 'Created',
@@ -356,7 +364,8 @@ const authController = {
 				data: {
 					username: decodedToken.UserInfo.username,
 					clientId: newClientId,
-					csrf,
+					csrf: newCsrf,
+					isVerified: tokenJoin.User.verified ?? false,
 					exp
 				}
 			};
@@ -387,24 +396,36 @@ const authController = {
 			throw err;
 		}
 	},
-	async logout({ xAuth }: XAuthReq) {
+	async logout({ xAuth, csrf }: XAuthReq) {
+		if (!xAuth.startsWith('Bearer')) {
+			throw APIError.unauthenticated('Missing bearer!');
+		}
+		if (!csrf || csrf === 'undefined') {
+			throw APIError.unauthenticated('Missing CSRF token!');
+		}
 		try {
 			const callMeta = currentRequest() as APICallMeta;
 			const model = callMeta.middlewareData?.mainModel as MainModel;
 			const clientId = xAuth.split(' ')[1];
 			if (!clientId || clientId === 'undefined') {
-				return APIError.unauthenticated('Missing clientId!');
+				throw APIError.unauthenticated('Missing clientId!');
 			}
 
 			const token = await model.token.findOne({
 				where: { clientId }
 			});
-			if (!token) return APIError.permissionDenied('Token not found!');
-			await model.token.destroy({
-				where: { refresh: token.refresh }
-			});
+			if (!token) throw APIError.permissionDenied('Token not found!');
 
-			return;
+			if (token.csrf !== csrf) {
+				throw APIError.permissionDenied('CSRF token mismatch!');
+			}
+
+			await model.token.destroy({ where: { clientId } });
+
+			return {
+				status: 'Success',
+				message: 'Logout successful.'
+			};
 		} catch (error) {
 			const [err] = catchError('LOGOUT auth-controller', error);
 			throw err;
