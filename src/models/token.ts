@@ -92,7 +92,7 @@ const Token = (sequelize: Sequelize, dataTypes: typeof DataTypes) => {
 			hooks: {
 				async afterCreate(attributes, _) {
 					console.log(
-						`AFTER CREATE token >> userId: ${attributes.userId} has Logged in.`
+						`AFTER CREATE token >> ${attributes.userId} has Logged in.`
 					);
 
 					const { token } = await getMainModel();
@@ -124,7 +124,7 @@ const Token = (sequelize: Sequelize, dataTypes: typeof DataTypes) => {
 				},
 				afterDestroy(instance, _) {
 					console.log(
-						`AFTER DESTROY token >> (userId: ${instance.userId} | clientId: ${instance.clientId}) has Logged out.`
+						`AFTER DESTROY token >> ${instance.userId} has Logged out.`
 					);
 
           return;
