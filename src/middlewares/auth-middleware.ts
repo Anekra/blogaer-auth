@@ -9,7 +9,10 @@ const authMiddleware = {
 			}
 		},
 		async (req, next) => {
-			const header = req.rawRequest?.headers.authorization;
+			const header = req.rawRequest?.headers['x-authorization'];
+			if (typeof header !== 'string') {
+				throw APIError.permissionDenied('No authorization header');
+			}
 			if (!header?.startsWith('Oauth2')) {
 				console.warn(
 					"VERIFY OAUTH CODE auth-middleware >> Auth code doesn't start with Oauth2!"
@@ -26,7 +29,7 @@ const authMiddleware = {
 					'VERIFY OAUTH CODE auth-middleware >> Auth code is undefined!'
 				);
 
-				throw new APIError(ErrCode.PermissionDenied, 'Auth code is undefined!');
+				throw APIError.permissionDenied('Auth code is undefined!');
 			}
 			req.data.oauthCode = code;
 
