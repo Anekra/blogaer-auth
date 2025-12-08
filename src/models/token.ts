@@ -66,6 +66,7 @@ const Token = (sequelize: Sequelize, dataTypes: typeof DataTypes) => {
 				type: dataTypes.STRING
 			},
 			revoked: {
+				allowNull: false,
 				type: dataTypes.BOOLEAN
 			},
 			refreshExp: {
