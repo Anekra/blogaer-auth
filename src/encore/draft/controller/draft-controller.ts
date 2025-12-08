@@ -1,8 +1,7 @@
-import type { IncomingMessage, ServerResponse } from 'http';
+import type { IncomingMessage, ServerResponse } from 'node:http';
 import type { Channel } from 'amqplib';
 import { type APICallMeta, currentRequest } from 'encore.dev';
 import { APIError, ErrCode } from 'encore.dev/api';
-import { nanoid } from 'nanoid';
 import type { DraftDto } from '../../../types/dto/DraftDto';
 import type { PagedDraftDto } from '../../../types/dto/PagedDraftDto';
 import type { AddDraftReq, PatchDraftReq } from '../../../types/request';
@@ -36,7 +35,7 @@ const draftController = {
 				exclusive: true,
 				durable: false
 			});
-			const correlationId = nanoid(9);
+			const correlationId = crypto.randomUUID();
 			rpcPubChan.publish(
 				ExchangeName.Rpc,
 				'draft.get.by.user.id.key',
@@ -141,7 +140,7 @@ const draftController = {
 				durable: false
 			});
 
-			const correlationId = nanoid(9);
+			const correlationId = crypto.randomUUID();
 			rpcPubChan.publish(ExchangeName.Rpc, 'draft.get.by.id.key', message, {
 				persistent: false,
 				replyTo: queue,
@@ -232,7 +231,7 @@ const draftController = {
 				durable: false
 			});
 
-			const correlationId = nanoid(9);
+			const correlationId = crypto.randomUUID();
 			rpcPubChan.publish(ExchangeName.Rpc, 'draft.add.key', message, {
 				persistent: false,
 				replyTo: queue,
