@@ -96,39 +96,44 @@ const Token = (sequelize: Sequelize, dataTypes: typeof DataTypes) => {
 						`AFTER CREATE token >> ${attributes.userId} has Logged in.`
 					);
 
-					const { token } = await getMainModel();
-					if ((await token.count()) > 1) {
-						const { count } = await token.findAndCountAll({
-							where: { clientId: attributes.clientId }
-						});
-						if (count > 1) {
-							await token.destroy({
+					try {
+						const { token } = await getMainModel();
+						if ((await token.count()) > 1) {
+							const { count } = await token.findAndCountAll({
+								where: { clientId: attributes.clientId }
+							});
+							if (count > 1) {
+								await token.destroy({
+									where: {
+										clientId: attributes.clientId,
+										refresh: { [Op.ne]: attributes.refresh }
+									}
+								});
+							}
+
+							const aWeekAgo = new Date();
+							aWeekAgo.setDate(aWeekAgo.getDate() - 7);
+							token.destroy({
 								where: {
-									clientId: attributes.clientId,
-									refresh: { [Op.ne]: attributes.refresh }
+									updatedAt: {
+										[Op.lt]: aWeekAgo
+									}
 								}
 							});
 						}
 
-						const aWeekAgo = new Date();
-						aWeekAgo.setDate(aWeekAgo.getDate() - 7);
-						token.destroy({
-							where: {
-								updatedAt: {
-									[Op.lt]: aWeekAgo
-								}
-							}
-						});
+						return;
+					} catch (err) {
+						console.error(err);
+						return;
 					}
-
-					return;
 				},
 				afterDestroy(instance, _) {
 					console.log(
 						`AFTER DESTROY token >> ${instance.userId} has Logged out.`
 					);
 
-          return;
+					return;
 				}
 			}
 		}

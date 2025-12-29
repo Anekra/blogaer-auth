@@ -1,14 +1,13 @@
 import jwt from 'jsonwebtoken';
 import mainModel from '../../../../models/main-model';
 import type User from '../../../../models/user';
-import { generateUAId } from '../../../../utils/helper';
 
 const jwtService = {
 	async generateJwt(
 		id: string,
 		username: string,
 		roleId: number,
-		userAgent?: string
+		uAId?: string
 	) {
 		const refreshToken = jwt.sign(
 			{
@@ -50,8 +49,7 @@ const jwtService = {
 			});
 		}
 
-		if (!user.SavedAccount && userAgent) {
-			const { uAId } = generateUAId(userAgent);
+		if (!user.SavedAccount && uAId) {
 			const [savedAccount, isCreated] = await model.savedAccount.findOrCreate({
 				where: { id: uAId },
 				defaults: { id: uAId },

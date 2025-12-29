@@ -9,9 +9,9 @@ const authMiddleware = {
 			}
 		},
 		async (req, next) => {
-			const header = req.rawRequest?.headers['x-authorization'];
+			const header = req.rawRequest?.headers['x-oauth-code'];
 			if (typeof header !== 'string') {
-				throw APIError.permissionDenied('No authorization header');
+				throw APIError.permissionDenied('Missing oauth code!');
 			}
 			if (!header?.startsWith('Oauth2')) {
 				console.warn(

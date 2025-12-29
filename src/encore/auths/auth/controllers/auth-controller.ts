@@ -356,7 +356,6 @@ const authController = {
 			const exp: number = Date.now() / 1000 + 10 * 60;
 
 			await transaction.commit();
-			console.log('REFRESH', tokenJoin.User);
 
 			return {
 				status: 'Created',

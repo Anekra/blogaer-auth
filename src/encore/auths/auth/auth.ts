@@ -23,7 +23,7 @@ async function mainAuth({ authorization, csrf }: AuthReq): Promise<AuthData> {
 	const token = await model.token.findOne({
 		where: {
 			clientId,
-			access: {
+			accessExp: {
 				[Op.gte]: new Date(Date.now() - 15 * 60 * 1000)
 			}
 		}

@@ -33,7 +33,7 @@ const postController = {
 			const message = Buffer.from(JSON.stringify({ number, size }));
 			const userList = await getAllUserImgsAndUsernames();
 			if (!userList) throw new Error('Database connection failed!');
-
+			
 			const { queue } = await rpcConChan.assertQueue('', {
 				exclusive: true,
 				durable: false,
