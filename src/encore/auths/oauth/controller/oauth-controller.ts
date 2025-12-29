@@ -8,7 +8,8 @@ import {
 	catchError,
 	closeChannel,
 	errCodeToHttpStatus,
-	generateRandomChars
+	generateRandomChars,
+	generateUAId
 } from '../../../../utils/helper';
 import jwtService from '../../auth/services/jwt-service';
 
@@ -20,8 +21,8 @@ const oauthController = {
 		const model = callMeta.middlewareData?.mainModel as MainModel;
 		const code = callMeta.middlewareData?.oauthCode as string;
 
-		const userAgent = req.headers['user-agent'];
-		if (!userAgent || userAgent === 'undefined') {
+		const ua = req.headers['user-agent'];
+		if (!ua || ua === 'undefined') {
 			throw APIError.permissionDenied('No forwarded-for header');
 		}
 
@@ -29,6 +30,8 @@ const oauthController = {
 		if (typeof xff !== 'string' || !xff || xff === 'undefined') {
 			throw APIError.permissionDenied('No forwarded-for header');
 		}
+
+		console.log('Check if its double request', ua, xff, code);
 
 		const timeout = setTimeout(() => {
 			console.warn('GOOGLE auth-controller >> Request timeout!');
@@ -41,7 +44,7 @@ const oauthController = {
 					details: '10 seconds of request time reached.'
 				})
 			);
-		}, 5000);
+		}, 15000);
 
 		try {
 			const { queue } = await rpcConChan.assertQueue('', {
@@ -65,6 +68,9 @@ const oauthController = {
 				}
 
 				const userInfo = JSON.parse(msg.content.toString());
+				if (!userInfo.email || !userInfo.given_name) {
+					throw APIError.internal('Invalid user data from oauth service!');
+				}
 				const [user, isCreated] = await model.user.findOrCreate({
 					where: {
 						email: userInfo.email
@@ -90,25 +96,28 @@ const oauthController = {
 					});
 				}
 
-				const ip = xff ? xff.split(',')[0].trim() : '127.0.0.1';
+				const { uAId } = generateUAId(ua);
 				const [accessToken, refreshToken] = await jwtService.generateJwt(
 					user.id,
 					user.username,
 					user.roleId,
-					userAgent
+					uAId
 				);
 
+				const ip = xff ? xff.split(',')[0].trim() : '127.0.0.1';
 				const clientId = crypto.randomUUID();
 				const { csrf } = await model.token.create({
 					refresh: refreshToken,
 					access: accessToken,
-					userId: `${user.id}`,
+					userId: user.id,
 					ipAddress: ip,
-					userAgent,
+					userAgent: uAId,
 					revoked: false,
 					loginWith: OauthProvider.Google,
 					clientId
 				});
+
+				console.log("CSRF", csrf)
 
 				res.statusCode = 200;
 				res.setHeader('Content-Type', 'application/json');
