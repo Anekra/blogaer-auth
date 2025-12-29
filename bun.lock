@@ -1,5 +1,6 @@
 {
   "lockfileVersion": 1,
+  "configVersion": 0,
   "workspaces": {
     "": {
       "name": "encore-ts-starter",
@@ -8,7 +9,7 @@
         "@simplewebauthn/server": "^13.1.1",
         "amqplib": "^0.10.8",
         "bcryptjs": "^3.0.2",
-        "encore.dev": "1.52.3",
+        "encore.dev": "1.53.2",
         "jsonwebtoken": "^9.0.2",
         "nodemailer": "^7.0.4",
         "otplib": "^12.0.1",
@@ -233,7 +234,7 @@
 
     "encoding": ["encoding@0.1.13", "", { "dependencies": { "iconv-lite": "^0.6.2" } }, "sha512-ETBauow1T35Y/WZMkio9jiM0Z5xjHHmJ4XmjZOq1l/dXz3lr2sRn87nJy20RupqSh1F2m3HHPSp8ShIPQJrJ3A=="],
 
-    "encore.dev": ["encore.dev@1.52.3", "", {}, "sha512-PGRCCY3eAHNShYdACKRu7/nurBHqhi67E2fTWLzP6Dpr77kgeR/TJK/GruKVodDLyMc77Z9gajgZYZrE/OSjLQ=="],
+    "encore.dev": ["encore.dev@1.53.2", "", {}, "sha512-NfQuUe/Vvm77KkkVywI3zYxEOg9r3xDyYVIg/z0uskwj2IxIEY1501ForA27/kv+Q5m2OdXiS6x6Ox62ckCptQ=="],
 
     "end-of-stream": ["end-of-stream@1.4.5", "", { "dependencies": { "once": "^1.4.0" } }, "sha512-ooEGc6HP26xXq/N+GCGOT0JKCLDGrq2bQUZrQ7gyrJiZANJ/8YDTxTpQBXGMn+WbIQXNVpyWymm7KYVICQnyOg=="],
 
